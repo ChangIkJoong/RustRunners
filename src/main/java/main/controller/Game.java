@@ -14,7 +14,6 @@ import main.model.entities.entity.Player;
 import main.model.leaderboard.LeaderboardService;
 import main.model.leaderboard.ScoreEntry;
 import main.model.levels.LevelManager;
-import main.model.observerEvents.GameObserver;
 import main.view.GamePanel;
 import main.view.GameView;
 import main.view.GameWindow;
@@ -32,14 +31,14 @@ import main.view.states.MainMenu;
 import utilities.GameConfig;
 import utilities.LoadSave;
 
-public class Game implements Runnable, GameObserver, IGameActions, IGameRead,
+public class Game implements Runnable, IGameActions, IGameRead,
         MainMenuActions, LevelSelectActions, LeaderboardActions {
 
-    public static final int TILES_DEAFULT_SIZE = GameConfig.TILES_DEFAULT_SIZE;
+    //public static final int TILES_DEAFULT_SIZE = GameConfig.TILES_DEFAULT_SIZE;
     public static final float SCALE = GameConfig.SCALE;
-    public static final int TILES_IN_WIDTH = GameConfig.TILES_IN_WIDTH;
-    public static final int TILES_IN_HEIGHT = GameConfig.TILES_IN_HEIGHT;
-    public static final int TILES_SIZE = GameConfig.TILES_SIZE;
+    //public static final int TILES_IN_WIDTH = GameConfig.TILES_IN_WIDTH;
+    //public static final int TILES_IN_HEIGHT = GameConfig.TILES_IN_HEIGHT;
+    //public static final int TILES_SIZE = GameConfig.TILES_SIZE;
     public static final int GAME_WIDTH = GameConfig.GAME_WIDTH;
     public static final int GAME_HEIGHT = GameConfig.GAME_HEIGHT;
 
@@ -72,6 +71,8 @@ public class Game implements Runnable, GameObserver, IGameActions, IGameRead,
     private LevelSelectState levelSelectState;
 
     private BufferedImage transitionImage;
+    private boolean wasPlayerDead = false;
+    private boolean wasInTransition = false;
 
     public Game() {
         audioController = AudioController.getInstance();
@@ -100,7 +101,6 @@ public class Game implements Runnable, GameObserver, IGameActions, IGameRead,
         loadPlayerForCurrentLevel();
 
         model = new GameModel(player, levelManager);
-        model.addObserver(this);
 
         view = new GameView(model, GAME_WIDTH, GAME_HEIGHT);
         transitionImage = LoadSave.getSpriteAtlas(LoadSave.TRANSITION_IMG);
@@ -125,37 +125,8 @@ public class Game implements Runnable, GameObserver, IGameActions, IGameRead,
         levelSelectState = new LevelSelectState(this);
 
         currentState = menuState;
-    }
-
-    @Override
-    public void onPlayerDied() {
-        audioController.playDead();
-        levelManager.getCurrentLvl().triggerSpawnPlatform();
-    }
-
-    @Override
-    public void onPlayerRespawn() {
-        audioController.playRespawn();
-        levelManager.getCurrentLvl().resetPlatforms();
-    }
-
-    @Override
-    public void onLevelCompleted() {
-        model.recordLevelCompletion();
-        audioController.playNextLevel();
-    }
-
-    @Override
-    public void onLevelLoadRequested() {
-    }
-
-    @Override
-    public void onTransitionComplete() {
-    }
-
-    @Override
-    public void onRunCompleted() {
-        setGameState(GameState.MENU);
+        wasPlayerDead = player.isDead();
+        wasInTransition = model.isInTransition();
     }
 
     private void loadPlayerForCurrentLevel() {
@@ -170,7 +141,45 @@ public class Game implements Runnable, GameObserver, IGameActions, IGameRead,
 
     private void update() {
         model.update();
+        handleModelSideEffects();
         currentState.update();
+    }
+
+    private void handleModelSideEffects() {
+        boolean isPlayerDead = player.isDead();
+        if (!wasPlayerDead && isPlayerDead) {
+            audioController.playDead();
+            levelManager.getCurrentLvl().triggerSpawnPlatform();
+        } else if (wasPlayerDead && !isPlayerDead) {
+            audioController.playRespawn();
+            levelManager.getCurrentLvl().resetPlatforms();
+        }
+        wasPlayerDead = isPlayerDead;
+
+        boolean inTransition = model.isInTransition();
+        if (!wasInTransition && inTransition) {
+            recordLevelCompletion();
+            audioController.playNextLevel();
+        }
+        wasInTransition = inTransition;
+
+        if (model.consumeRunCompleted()) {
+            setGameState(GameState.MENU);
+            wasPlayerDead = player.isDead();
+            wasInTransition = model.isInTransition();
+        }
+    }
+
+    private void recordLevelCompletion() {
+        long startTime = model.getStartTime();
+        if (startTime <= 0L) {
+            return;
+        }
+
+        long runEndTimeNanos = System.nanoTime();
+        double timeSeconds = (runEndTimeNanos - startTime) / 1_000_000_000.0;
+        int levelIndex = levelManager.getCurrentLevelIndex();
+        LoadSave.appendToScoreFile(model.getPlayerName(), levelIndex, timeSeconds, model.getTotalDeaths());
     }
 
     public void render(Graphics g) {

@@ -1,22 +1,13 @@
 package main.model;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import main.model.levels.LevelManager;
 import main.model.entities.entity.Player;
-import main.model.observerEvents.GameObserver;
-import utilities.LoadSave;
+import main.model.levels.LevelManager;
 
 public class GameModel {
     private static final float TRANSITION_SPEED = 0.015f;
 
-
     private final Player player;
     private final LevelManager levelManager;
-
-    // Observer List
-    private final List<GameObserver> observers = new ArrayList<>();
 
     // Controller-independent playing flag
     private boolean isActive = false;
@@ -36,53 +27,11 @@ public class GameModel {
     private int totalDeaths;
 
     private boolean isPaused = false;
+    private boolean runCompleted = false;
 
     public GameModel(Player player, LevelManager levelManager) {
         this.player = player;
         this.levelManager = levelManager;
-    }
-
-    //Observer ---------------
-    public void addObserver(GameObserver observer) {
-        if (!observers.contains(observer)) {
-            observers.add(observer);
-        }
-    }
-
-    private void notifyPlayerDied() {
-        for (GameObserver obs : observers) {
-            obs.onPlayerDied();
-        }
-    }
-
-    private void notifyPlayerRespawn() {
-        for (GameObserver obs : observers) {
-            obs.onPlayerRespawn();
-        }
-    }
-
-    private void notifyLevelCompleted() {
-        for (GameObserver obs : observers) {
-            obs.onLevelCompleted();
-        }
-    }
-
-    private void notifyLevelLoadRequested() {
-        for (GameObserver obs : observers) {
-            obs.onLevelLoadRequested();
-        }
-    }
-
-    private void notifyTransitionComplete() {
-        for (GameObserver obs : observers) {
-            obs.onTransitionComplete();
-        }
-    }
-
-    private void notifyRunCompleted() {
-        for (GameObserver obs : observers) {
-            obs.onRunCompleted();
-        }
     }
 
     //Update Loop---------------------------
@@ -108,16 +57,11 @@ public class GameModel {
         boolean isPlayerDead = player.isDead();
 
         if (!wasPlayerDead && isPlayerDead) {
-            // Player just died
             totalDeaths++;
-            notifyPlayerDied();
-        } else if (wasPlayerDead && !isPlayerDead) {
-            notifyPlayerRespawn();
         }
         wasPlayerDead = isPlayerDead;
 
         if (player.hasReachedLevelEnd()) {
-            notifyLevelCompleted();
             startLevelTransition();
             player.resetLevelEnd();
         }
@@ -138,10 +82,9 @@ public class GameModel {
 
                     if (advanced) {
                         reloadPlayerForCurrentLevel();
-                        notifyLevelLoadRequested();
                     } else {
                         resetTransition();
-                        notifyRunCompleted();
+                        runCompleted = true;
                         return;
                     }
                 }
@@ -152,7 +95,6 @@ public class GameModel {
             if (transitionScale <= 0f) {
                 transitionScale = 0f;
                 inTransition = false;
-                notifyTransitionComplete();
             }
         }
     }
@@ -217,14 +159,6 @@ public class GameModel {
         currentLevel.clearDeathPositions();
     }
 
-    // Scoring -----------------------------------
-    public void recordLevelCompletion() {
-        long runEndTimeNanos = System.nanoTime();
-        double timeSeconds = (runEndTimeNanos - startTime) / 1_000_000_000.0;
-        int levelIndex = levelManager.getCurrentLevelIndex();
-        LoadSave.appendToScoreFile(playerName, levelIndex, timeSeconds, totalDeaths);
-    }
-
     //Getters & Setters ---
     public Player getPlayer() {
         return player;
@@ -258,5 +192,19 @@ public class GameModel {
 
     public void setGameActive(boolean isPlaying) {
         this.isActive = isPlaying;
+    }
+
+    public int getTotalDeaths() {
+        return totalDeaths;
+    }
+
+    public long getStartTime() {
+        return startTime;
+    }
+
+    public boolean consumeRunCompleted() {
+        boolean value = runCompleted;
+        runCompleted = false;
+        return value;
     }
 }
