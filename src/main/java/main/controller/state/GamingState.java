@@ -3,19 +3,19 @@ package main.controller.state;
 import java.awt.Graphics;
 
 import audio.controller.AudioController;
-import main.controller.Game;
+import main.controller.GameController;
 
 public class GamingState extends GameBaseState {
 
     private boolean jumpSoundArmed = false;
 
-    public GamingState(Game game) {
-        super(game);
+    public GamingState(GameController controller) {
+        super(controller);
     }
 
     @Override
     public void render(Graphics g) {
-        game.renderGame(g);
+        controller.renderGame(g);
     }
 
     @Override
@@ -35,43 +35,43 @@ public class GamingState extends GameBaseState {
 
     @Override
     public void onMoveLeftPressed() {
-        game.getPlayer().setLeft(true);
+        controller.getPlayer().setLeft(true);
     }
 
     @Override
     public void onMoveLeftReleased() {
-        game.getPlayer().setLeft(false);
+        controller.getPlayer().setLeft(false);
     }
 
     @Override
     public void onMoveRightPressed() {
-        game.getPlayer().setRight(true);
+        controller.getPlayer().setRight(true);
     }
 
     @Override
     public void onMoveRightReleased() {
-        game.getPlayer().setRight(false);
+        controller.getPlayer().setRight(false);
     }
 
     @Override
     public void onJumpPressed() {
-        game.getPlayer().setJump(true);
+        controller.getPlayer().setJump(true);
     }
 
     @Override
     public void onJumpReleased() {
-        game.getPlayer().setJump(false);
+        controller.getPlayer().setJump(false);
         jumpSoundArmed = false;
     }
 
     @Override
     public void onTogglePause() {
-        game.togglePauseInternal();
+        controller.togglePauseInternal();
     }
 
     @Override
     public void onGoToMenu() {
-        game.setGameState(Game.GameState.MENU);
+        controller.setGameState(GameController.GameState.MENU);
     }
 
     @Override

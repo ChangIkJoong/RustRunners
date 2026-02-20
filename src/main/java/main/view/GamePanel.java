@@ -8,16 +8,14 @@ import java.awt.event.MouseMotionListener;
 
 import javax.swing.JPanel;
 
-import main.controller.Game;
-
-import static main.controller.Game.GAME_HEIGHT;
-import static main.controller.Game.GAME_WIDTH;
+import main.controller.GameController;
+import utilities.GameConfig;
 
 public class GamePanel extends JPanel {
-    private final Game game;
+    private final GameController controller;
 
-    public GamePanel(Game game) {
-        this.game = game;
+    public GamePanel(GameController controller) {
+        this.controller = controller;
         setPanelSize();
     }
 
@@ -35,17 +33,17 @@ public class GamePanel extends JPanel {
     }
 
     private void setPanelSize() {
-        Dimension size = new Dimension(GAME_WIDTH, GAME_HEIGHT);
+        Dimension size = new Dimension(GameConfig.GAME_WIDTH, GameConfig.GAME_HEIGHT);
         setPreferredSize(size);
-        System.out.println("size:" + GAME_WIDTH + " : " + GAME_HEIGHT);
+        System.out.println("size:" + GameConfig.GAME_WIDTH + " : " + GameConfig.GAME_HEIGHT);
     }
 
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        game.render(g);
+        controller.render(g);
     }
 
     public void onWindowFocusLost() {
-        game.windowFocusLost();
+        controller.onWindowFocusLost();
     }
 }

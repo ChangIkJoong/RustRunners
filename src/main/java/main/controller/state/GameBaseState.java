@@ -2,13 +2,13 @@ package main.controller.state;
 
 import java.awt.Graphics;
 
-import main.controller.Game;
+import main.controller.GameController;
 
 public abstract class GameBaseState {
-    protected final Game game;
+    protected final GameController controller;
 
-    protected GameBaseState(Game game) {
-        this.game = game;
+    protected GameBaseState(GameController controller) {
+        this.controller = controller;
     }
 
     public void update() {

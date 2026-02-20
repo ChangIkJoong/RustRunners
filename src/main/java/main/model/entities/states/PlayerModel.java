@@ -3,7 +3,6 @@ package main.model.entities.states;
 import java.awt.geom.Rectangle2D;
 
 import utilities.GameConfig;
-import main.model.entities.entity.Player;
 
 import static utilities.Constants.PlayerConstants.IDLE_RIGHT;
 

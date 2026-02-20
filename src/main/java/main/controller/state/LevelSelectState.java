@@ -3,7 +3,7 @@ package main.controller.state;
 import java.awt.Graphics;
 
 import audio.controller.AudioController;
-import main.controller.Game;
+import main.controller.GameController;
 import main.model.levels.LevelManager;
 import main.view.states.Actions.LevelSelectActions;
 import main.view.states.LevelSelect;
@@ -12,8 +12,8 @@ public class LevelSelectState extends GameBaseState implements LevelSelectAction
 
     private final LevelSelect levelSelectView;
 
-    public LevelSelectState(Game game, LevelManager levelManager) {
-        super(game);
+    public LevelSelectState(GameController controller, LevelManager levelManager) {
+        super(controller);
         this.levelSelectView = new LevelSelect(this, levelManager);
     }
 
@@ -34,7 +34,7 @@ public class LevelSelectState extends GameBaseState implements LevelSelectAction
 
     @Override
     public void onGoToMenu() {
-        game.setGameState(Game.GameState.MENU);
+        controller.setGameState(GameController.GameState.MENU);
     }
 
     @Override
@@ -54,12 +54,12 @@ public class LevelSelectState extends GameBaseState implements LevelSelectAction
 
     @Override
     public void onBackToMenu() {
-        game.setGameState(Game.GameState.MENU);
+        controller.setGameState(GameController.GameState.MENU);
     }
 
     @Override
     public void onSelectLevel(int levelIndex) {
-        game.getLevelManager().setCurrentLevelIndex(levelIndex);
-        game.setGameState(Game.GameState.PLAYING);
+        controller.getLevelManager().setCurrentLevelIndex(levelIndex);
+        controller.setGameState(GameController.GameState.PLAYING);
     }
 }

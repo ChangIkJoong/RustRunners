@@ -4,7 +4,7 @@ import java.awt.Graphics;
 import java.util.function.Supplier;
 
 import audio.controller.AudioController;
-import main.controller.Game;
+import main.controller.GameController;
 import main.view.states.Actions.MainMenuActions;
 import main.view.states.MainMenu;
 
@@ -12,8 +12,8 @@ public class MenuState extends GameBaseState implements MainMenuActions {
 
     private final MainMenu menuView;
 
-    public MenuState(Game game, Supplier<String> playerNameSupplier) {
-        super(game);
+    public MenuState(GameController controller, Supplier<String> playerNameSupplier) {
+        super(controller);
         this.menuView = new MainMenu(this, playerNameSupplier);
     }
 
@@ -64,26 +64,26 @@ public class MenuState extends GameBaseState implements MainMenuActions {
 
     @Override
     public void onPlay() {
-        game.setGameState(Game.GameState.PLAYING);
+        controller.setGameState(GameController.GameState.PLAYING);
     }
 
     @Override
     public void onOpenLevelSelect() {
-        game.setGameState(Game.GameState.LEVEL_SELECT);
+        controller.setGameState(GameController.GameState.LEVEL_SELECT);
     }
 
     @Override
     public void onOpenLeaderboard() {
-        game.setGameState(Game.GameState.LEADERBOARD);
+        controller.setGameState(GameController.GameState.LEADERBOARD);
     }
 
     @Override
     public void onQuit() {
-        System.exit(0);
+        controller.exitGame();
     }
 
     @Override
     public void onSetPlayerName(String name) {
-        game.setPlayerName(name);
+        controller.setPlayerName(name);
     }
 }

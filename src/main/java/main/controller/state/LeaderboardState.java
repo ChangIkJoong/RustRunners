@@ -3,7 +3,7 @@ package main.controller.state;
 import java.awt.Graphics;
 
 import audio.controller.AudioController;
-import main.controller.Game;
+import main.controller.GameController;
 import main.view.states.Actions.LeaderboardActions;
 import main.view.states.Leaderboard;
 
@@ -11,8 +11,8 @@ public class LeaderboardState extends GameBaseState implements LeaderboardAction
 
     private final Leaderboard leaderboardView;
 
-    public LeaderboardState(Game game, Leaderboard.LeaderboardDataSource dataSource) {
-        super(game);
+    public LeaderboardState(GameController controller, Leaderboard.LeaderboardDataSource dataSource) {
+        super(controller);
         this.leaderboardView = new Leaderboard(this, dataSource);
     }
 
@@ -33,7 +33,7 @@ public class LeaderboardState extends GameBaseState implements LeaderboardAction
 
     @Override
     public void onGoToMenu() {
-        game.setGameState(Game.GameState.MENU);
+        controller.setGameState(GameController.GameState.MENU);
     }
 
     @Override
@@ -48,7 +48,7 @@ public class LeaderboardState extends GameBaseState implements LeaderboardAction
 
     @Override
     public void onBackToMenu() {
-        game.setGameState(Game.GameState.MENU);
+        controller.setGameState(GameController.GameState.MENU);
     }
 
     @Override
