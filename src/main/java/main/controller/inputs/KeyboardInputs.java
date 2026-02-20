@@ -2,143 +2,164 @@ package main.controller.inputs;
 
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import main.controller.facades.IGameActions;
-import main.controller.facades.IGameRead;
 import main.controller.inputs.commands.Command;
 import main.controller.inputs.commands.GoToMenuCommand;
 import main.controller.inputs.commands.JumpPressCommand;
 import main.controller.inputs.commands.JumpReleaseCommand;
+import main.controller.inputs.commands.LeaderboardNextLevelCommand;
+import main.controller.inputs.commands.LeaderboardPreviousLevelCommand;
+import main.controller.inputs.commands.MenuNameControlKeyCommand;
+import main.controller.inputs.commands.MenuNameTypedCommand;
 import main.controller.inputs.commands.MoveLeftPressCommand;
 import main.controller.inputs.commands.MoveLeftReleaseCommand;
 import main.controller.inputs.commands.MoveRightPressCommand;
 import main.controller.inputs.commands.MoveRightReleaseCommand;
+import main.controller.inputs.commands.NoOpCommand;
+import main.controller.inputs.commands.PlayJumpSoundCommand;
 import main.controller.inputs.commands.TogglePauseCommand;
 
 public class KeyboardInputs implements KeyListener {
 
-    private final IGameActions actions;
-    private final IGameRead read;
-    private boolean keyDown = false;
+    private final MenuNameTypedCommand menuNameTypedCommand;
 
-    private final Map<Integer, Command> pressedCommands = new HashMap<>();
-    private final Map<Integer, Command> releasedCommands = new HashMap<>();
+    private final Map<Integer, List<Command>> pressedCommands = new HashMap<>();
+    private final Map<Integer, List<Command>> releasedCommands = new HashMap<>();
+    private final Map<Integer, Command> typedCommands = new HashMap<>();
 
-    public KeyboardInputs(IGameActions actions, IGameRead read) {
-        this.actions = actions;
-        this.read = read;
-        initCommands();
+    public KeyboardInputs(IGameActions actions) {
+        this.menuNameTypedCommand = new MenuNameTypedCommand(actions);
+        initCommands(actions);
     }
 
-    private void initCommands() {
-        // movement
+    private void initCommands(IGameActions actions) {
         Command moveLeftPress = new MoveLeftPressCommand(actions);
         Command moveLeftRelease = new MoveLeftReleaseCommand(actions);
         Command moveRightPress = new MoveRightPressCommand(actions);
         Command moveRightRelease = new MoveRightReleaseCommand(actions);
 
-        // jump
         Command jumpPress = new JumpPressCommand(actions);
         Command jumpRelease = new JumpReleaseCommand(actions);
+        Command playJumpSound = new PlayJumpSoundCommand(actions);
 
-        // control
         Command togglePause = new TogglePauseCommand(actions);
         Command goToMenu = new GoToMenuCommand(actions);
+        Command leaderboardPrevious = new LeaderboardPreviousLevelCommand(actions);
+        Command leaderboardNext = new LeaderboardNextLevelCommand(actions);
 
-        // map keys to commands (press)
-        pressedCommands.put(KeyEvent.VK_A, moveLeftPress);
-        pressedCommands.put(KeyEvent.VK_LEFT, moveLeftPress);
-        pressedCommands.put(KeyEvent.VK_D, moveRightPress);
-        pressedCommands.put(KeyEvent.VK_RIGHT, moveRightPress);
+        Command menuNameEnter = new MenuNameControlKeyCommand(actions, KeyEvent.VK_ENTER);
+        Command menuNameEscape = new MenuNameControlKeyCommand(actions, KeyEvent.VK_ESCAPE);
+        Command menuNameBackspace = new MenuNameControlKeyCommand(actions, KeyEvent.VK_BACK_SPACE);
+        Command noOp = new NoOpCommand();
 
-        pressedCommands.put(KeyEvent.VK_SPACE, jumpPress);
-        pressedCommands.put(KeyEvent.VK_W, jumpPress);
-        pressedCommands.put(KeyEvent.VK_UP, jumpPress);
+        bindPressed(KeyEvent.VK_A, moveLeftPress);
+        bindPressed(KeyEvent.VK_LEFT, moveLeftPress);
+        bindPressed(KeyEvent.VK_LEFT, leaderboardPrevious);
+        bindPressed(KeyEvent.VK_D, moveRightPress);
+        bindPressed(KeyEvent.VK_RIGHT, moveRightPress);
+        bindPressed(KeyEvent.VK_RIGHT, leaderboardNext);
 
-        pressedCommands.put(KeyEvent.VK_P, togglePause);
-        pressedCommands.put(KeyEvent.VK_ESCAPE, goToMenu);
+        bindPressed(KeyEvent.VK_SPACE, playJumpSound);
+        bindPressed(KeyEvent.VK_SPACE, jumpPress);
+        bindPressed(KeyEvent.VK_W, playJumpSound);
+        bindPressed(KeyEvent.VK_W, jumpPress);
+        bindPressed(KeyEvent.VK_UP, playJumpSound);
+        bindPressed(KeyEvent.VK_UP, jumpPress);
 
-        // map keys to commands (release)
-        releasedCommands.put(KeyEvent.VK_A, moveLeftRelease);
-        releasedCommands.put(KeyEvent.VK_LEFT, moveLeftRelease);
-        releasedCommands.put(KeyEvent.VK_D, moveRightRelease);
-        releasedCommands.put(KeyEvent.VK_RIGHT, moveRightRelease);
+        bindPressed(KeyEvent.VK_P, togglePause);
+        bindPressed(KeyEvent.VK_ESCAPE, goToMenu);
+        bindPressed(KeyEvent.VK_ESCAPE, menuNameEscape);
+        bindPressed(KeyEvent.VK_ENTER, menuNameEnter);
+        bindPressed(KeyEvent.VK_BACK_SPACE, menuNameBackspace);
 
-        releasedCommands.put(KeyEvent.VK_SPACE, jumpRelease);
-        releasedCommands.put(KeyEvent.VK_W, jumpRelease);
-        releasedCommands.put(KeyEvent.VK_UP, jumpRelease);
+        bindReleased(KeyEvent.VK_A, moveLeftRelease);
+        bindReleased(KeyEvent.VK_LEFT, moveLeftRelease);
+        bindReleased(KeyEvent.VK_D, moveRightRelease);
+        bindReleased(KeyEvent.VK_RIGHT, moveRightRelease);
+
+        bindReleased(KeyEvent.VK_SPACE, jumpRelease);
+        bindReleased(KeyEvent.VK_W, jumpRelease);
+        bindReleased(KeyEvent.VK_UP, jumpRelease);
+
+        bindTyped('\b', noOp);
+        bindTyped('\n', noOp);
+        bindTyped('\r', noOp);
+        bindTyped(27, noOp);
     }
 
-    private boolean isEditingName() {
-        return read.getGameState() == main.controller.Game.GameState.MENU && read.isEditingPlayerName();
+    private void bindPressed(int keyCode, Command command) {
+        List<Command> commands = pressedCommands.get(keyCode);
+        if (commands == null) {
+            commands = new ArrayList<>();
+            pressedCommands.put(keyCode, commands);
+        }
+        commands.add(command);
     }
 
-    private boolean isJumpKey(int keyCode) {
-        return keyCode == KeyEvent.VK_SPACE ||
-               keyCode == KeyEvent.VK_W ||
-               keyCode == KeyEvent.VK_UP;
+    private void bindReleased(int keyCode, Command command) {
+        List<Command> commands = releasedCommands.get(keyCode);
+        if (commands == null) {
+            commands = new ArrayList<>();
+            releasedCommands.put(keyCode, commands);
+        }
+        commands.add(command);
+    }
+
+    private void bindTyped(int typedChar, Command command) {
+        typedCommands.put(typedChar, command);
     }
 
     @Override
-    public void keyTyped(KeyEvent e) {
-        // when editing name in main menu, collect characters here
-        if (isEditingName()) {
-            actions.menuNameTyped(e.getKeyChar());
+    public void keyTyped(KeyEvent event) {
+        dispatchTyped(event);
+    }
+
+    @Override
+    public void keyPressed(KeyEvent event) {
+        dispatchPressed(event);
+    }
+
+    @Override
+    public void keyReleased(KeyEvent event) {
+        dispatchReleased(event);
+    }
+
+    private void dispatchPressed(KeyEvent event) {
+        dispatchCommands(pressedCommands.get(event.getKeyCode()));
+    }
+
+    private void dispatchReleased(KeyEvent event) {
+        dispatchCommands(releasedCommands.get(event.getKeyCode()));
+    }
+
+    private void dispatchTyped(KeyEvent event) {
+        int typedChar = event.getKeyChar();
+        Command command = typedCommands.get(typedChar);
+        if (command == null) {
+            menuNameTypedCommand.setTypedChar(event.getKeyChar());
+            command = menuNameTypedCommand;
+        }
+        dispatchCommand(command);
+    }
+
+    private void dispatchCommand(Command command) {
+        if (command != null) {
+            command.execute();
         }
     }
 
-    @Override
-    public void keyPressed(KeyEvent e) {
-        if (isEditingName()) {
-            int code = e.getKeyCode();
-            if (code == KeyEvent.VK_ENTER || code == KeyEvent.VK_ESCAPE || code == KeyEvent.VK_BACK_SPACE) {
-                actions.menuNameControlKey(code);
-            }
+    private void dispatchCommands(List<Command> commands) {
+        if (commands == null) {
             return;
         }
 
-        int keyCode = e.getKeyCode();
-
-        // LEFT/RIGHT navigation for leaderboarding...
-        if (read.getGameState() == main.controller.Game.GameState.LEADERBOARD) {
-            if (keyCode == KeyEvent.VK_LEFT) {
-                actions.leaderboardPreviousLevel();
-                return;
-            } else if (keyCode == KeyEvent.VK_RIGHT) {
-                actions.leaderboardNextLevel();
-                return;
-            }
-        }
-
-        //TODO, abstract this to the key in the command, or put it into a listener. choices..
-        // Play jump sound once per press
-        if (isJumpKey(keyCode) && !keyDown) {
-            actions.playJumpSound();
-            keyDown = true;
-        }
-
-        Command cmd = pressedCommands.get(keyCode);
-        if (cmd != null) {
-            cmd.execute();
-        }
-    }
-
-    @Override
-    public void keyReleased(KeyEvent e) {
-        if (isEditingName()) {
-            return;
-        }
-
-        int keyCode = e.getKeyCode();
-        if (isJumpKey(keyCode)) {
-            keyDown = false;
-        }
-
-        Command cmd = releasedCommands.get(keyCode);
-        if (cmd != null) {
-            cmd.execute();
+        for (Command command : commands) {
+            command.execute();
         }
     }
 }

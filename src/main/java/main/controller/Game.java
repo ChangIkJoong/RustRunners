@@ -6,7 +6,6 @@ import java.util.List;
 
 import audio.controller.AudioController;
 import main.controller.facades.IGameActions;
-import main.controller.facades.IGameRead;
 import main.controller.inputs.KeyboardInputs;
 import main.controller.inputs.MouseInputs;
 import main.model.GameModel;
@@ -31,7 +30,7 @@ import main.view.states.MainMenu;
 import utilities.GameConfig;
 import utilities.LoadSave;
 
-public class Game implements Runnable, IGameActions, IGameRead,
+public class Game implements Runnable, IGameActions,
         MainMenuActions, LevelSelectActions, LeaderboardActions {
 
     //public static final int TILES_DEAFULT_SIZE = GameConfig.TILES_DEFAULT_SIZE;
@@ -83,7 +82,7 @@ public class Game implements Runnable, IGameActions, IGameRead,
         }
 
         gamePanel = new GamePanel(this);
-        KeyboardInputs keyboardInputs = new KeyboardInputs(this, this);
+        KeyboardInputs keyboardInputs = new KeyboardInputs(this);
         MouseInputs mouseInputs = new MouseInputs(this);
         gamePanel.attachInputListeners(keyboardInputs, mouseInputs, mouseInputs);
 
@@ -235,7 +234,6 @@ public class Game implements Runnable, IGameActions, IGameRead,
         player.resetDirBooleans();
     }
 
-    @Override
     public GameState getGameState() {
         return gameState;
     }
@@ -305,74 +303,85 @@ public class Game implements Runnable, IGameActions, IGameRead,
     }
 
     @Override
-    public boolean isEditingPlayerName() {
-        return mainMenu != null && mainMenu.isEditingName();
-    }
-
-    @Override
     public void moveLeftPressed() {
-        player.setLeft(true);
+        if (gameState == GameState.PLAYING) {
+            player.setLeft(true);
+        }
     }
 
     @Override
     public void moveLeftReleased() {
-        player.setLeft(false);
+        if (gameState == GameState.PLAYING) {
+            player.setLeft(false);
+        }
     }
 
     @Override
     public void moveRightPressed() {
-        player.setRight(true);
+        if (gameState == GameState.PLAYING) {
+            player.setRight(true);
+        }
     }
 
     @Override
     public void moveRightReleased() {
-        player.setRight(false);
+        if (gameState == GameState.PLAYING) {
+            player.setRight(false);
+        }
     }
 
     @Override
     public void jumpPressed() {
-        player.setJump(true);
+        if (gameState == GameState.PLAYING) {
+            player.setJump(true);
+        }
     }
 
     @Override
     public void jumpReleased() {
-        player.setJump(false);
+        if (gameState == GameState.PLAYING) {
+            player.setJump(false);
+        }
     }
 
     @Override
     public void goToMenu() {
-        setGameState(GameState.MENU);
+        if (gameState != GameState.MENU) {
+            setGameState(GameState.MENU);
+        }
     }
 
     @Override
     public void playJumpSound() {
-        audioController.playJump();
+        if (gameState == GameState.PLAYING) {
+            audioController.playJump();
+        }
     }
 
     @Override
     public void leaderboardNextLevel() {
-        if (leaderboard != null) {
+        if (gameState == GameState.LEADERBOARD && leaderboard != null) {
             leaderboard.nextLevel();
         }
     }
 
     @Override
     public void leaderboardPreviousLevel() {
-        if (leaderboard != null) {
+        if (gameState == GameState.LEADERBOARD && leaderboard != null) {
             leaderboard.previousLevel();
         }
     }
 
     @Override
     public void menuNameTyped(char c) {
-        if (mainMenu != null) {
+        if (gameState == GameState.MENU && mainMenu != null && mainMenu.isEditingName()) {
             mainMenu.handleNameKeyPressed(0, c);
         }
     }
 
     @Override
     public void menuNameControlKey(int keyCode) {
-        if (mainMenu != null) {
+        if (gameState == GameState.MENU && mainMenu != null && mainMenu.isEditingName()) {
             mainMenu.handleNameKeyPressed(keyCode, '\0');
         }
     }
