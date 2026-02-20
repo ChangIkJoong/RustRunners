@@ -1,14 +1,6 @@
 package main.model.entities.states;
-
-import main.model.entities.entity.MovingPlatform;
-
 import java.awt.geom.Rectangle2D;
 
-/**
- * State holder for {@link MovingPlatform}.
- *
- * <p>No rendering code and no sprite assets.
- */
 public class MovingPlatformModel {
 
     private Rectangle2D.Float hitbox;

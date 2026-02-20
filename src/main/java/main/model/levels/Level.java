@@ -397,10 +397,11 @@ public class Level {
         }
     }
 
+    //test thing 1
     public boolean isSpawnPlatformAnimating() {
         return spawnPlatform != null && spawnPlatform.isAnimating();
     }
-
+    //test thing 2
     public boolean hasSpawnPlatformReachedBottom() {
         return spawnPlatform == null || spawnPlatform.hasReachedBottom();
     }

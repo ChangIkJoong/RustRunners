@@ -255,10 +255,6 @@ public class Game implements Runnable, GameObserver, IGameActions, IGameRead,
         return levelSelect;
     }
 
-    public String getPlayerName() {
-        return model.getPlayerName();
-    }
-
     public void setPlayerName(String playerName) {
         model.setPlayerName(playerName);
     }

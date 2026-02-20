@@ -41,7 +41,7 @@ public class LeaderboardService {
                 System.out.println("Failed to parse leaderboard line: " + line);
             }
         }
-
+        //GPT generated, good solution though
         entries.sort(Comparator.comparingInt(ScoreEntry::getDeaths).thenComparingDouble(ScoreEntry::getTimeSeconds));
 
         if (entries.size() > limit) {
