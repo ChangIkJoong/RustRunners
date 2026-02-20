@@ -1,7 +1,6 @@
 package main.model.entities.states;
 
 import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
 
 public class TriggerSpikeModel {
 
@@ -13,7 +12,7 @@ public class TriggerSpikeModel {
     private float targetY;
     private float speed;
 
-    private BufferedImage sprite;
+    private int spriteId;
 
     private boolean triggered;
     private boolean reachedTarget;
@@ -30,13 +29,13 @@ public class TriggerSpikeModel {
     private int id = -1;
 
     public TriggerSpikeModel(Rectangle2D.Float hitbox,
-                            float startX, float startY,
-                            float targetX, float targetY,
-                            float speed,
-                            float triggerDistance,
-                            BufferedImage sprite,
-                            boolean shouldReturn,
-                            int id) {
+                             float startX, float startY,
+                             float targetX, float targetY,
+                             float speed,
+                             float triggerDistance,
+                             int spriteId,
+                             boolean shouldReturn,
+                             int id) {
         this.hitbox = hitbox;
         this.startX = startX;
         this.startY = startY;
@@ -44,7 +43,7 @@ public class TriggerSpikeModel {
         this.targetY = targetY;
         this.speed = speed;
         this.triggerDistance = triggerDistance;
-        this.sprite = sprite;
+        this.spriteId = spriteId;
         this.shouldReturn = shouldReturn;
         this.id = id;
     }
@@ -97,12 +96,12 @@ public class TriggerSpikeModel {
         this.speed = speed;
     }
 
-    public BufferedImage getSprite() {
-        return sprite;
+    public int getSpriteId() {
+        return spriteId;
     }
 
-    public void setSprite(BufferedImage sprite) {
-        this.sprite = sprite;
+    public void setSpriteId(int spriteId) {
+        this.spriteId = spriteId;
     }
 
     public boolean isTriggered() {
@@ -177,4 +176,3 @@ public class TriggerSpikeModel {
         this.id = id;
     }
 }
-

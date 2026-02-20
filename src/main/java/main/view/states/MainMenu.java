@@ -7,11 +7,14 @@ import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.function.Supplier;
 
-import main.controller.Game;
+import main.view.states.Actions.MainMenuActions;
+import utilities.GameConfig;
 
 public class MainMenu {
-    private Game game;
+    private final MainMenuActions actions;
+    private final Supplier<String> playerNameSupplier;
     private ArrayList<String> options = new ArrayList<>();
     private ArrayList<Rectangle> bounds = new ArrayList<>();
     private int selected = -1;
@@ -32,8 +35,9 @@ public class MainMenu {
         NORMAL, HOVER, CLICK
     }
 
-    public MainMenu(Game game) {
-        this.game = game;
+    public MainMenu(MainMenuActions actions, Supplier<String> playerNameSupplier) {
+        this.actions = actions;
+        this.playerNameSupplier = playerNameSupplier;
 
         options.add("PLAY"); // index 0
         options.add("CHANGE PLAYER"); // index 1
@@ -43,8 +47,8 @@ public class MainMenu {
 
         int buttonWidth = 350;  // Adjust this value for different button width
         int buttonHeight = 80;  // Adjust this value for different button height
-        int startextNumber = (Game.GAME_WIDTH - buttonWidth) / 2;
-        int startY = (Game.GAME_HEIGHT / 2 - (options.size() * (buttonHeight + 10)) / 2) + 50;
+        int startextNumber = (GameConfig.GAME_WIDTH - buttonWidth) / 2;
+        int startY = (GameConfig.GAME_HEIGHT / 2 - (options.size() * (buttonHeight + 10)) / 2) + 50;
         for (int i = 0; i < options.size(); i++) {
             bounds.add(new Rectangle(startextNumber, startY + i * (buttonHeight + 10), buttonWidth, buttonHeight));
         }
@@ -124,11 +128,11 @@ public class MainMenu {
     public void draw(Graphics g) {
         // background
         if (backgroundImage != null) {
-            g.drawImage(backgroundImage, 0, 0, Game.GAME_WIDTH, Game.GAME_HEIGHT, null);
+            g.drawImage(backgroundImage, 0, 0, GameConfig.GAME_WIDTH, GameConfig.GAME_HEIGHT, null);
         } else {
             // Fallback if image not loaded
             g.setColor(Color.BLACK);
-            g.fillRect(0, 0, Game.GAME_WIDTH, Game.GAME_HEIGHT);
+            g.fillRect(0, 0, GameConfig.GAME_WIDTH, GameConfig.GAME_HEIGHT);
         }
 
         // title
@@ -137,7 +141,7 @@ public class MainMenu {
 
         // current player name
         g.setFont(new Font("Arial", Font.BOLD, 20));
-        String nameText = "Player: " + game.getPlayerName();
+        String nameText = "Player: " + playerNameSupplier.get();
         g.drawString(nameText, 20, 40);
 
         // the several options displayed:
@@ -170,12 +174,12 @@ public class MainMenu {
             g.setColor(Color.WHITE);
             String prompt = "Enter name (letters/numbers), ENTER to confirm, ESC to cancel";
             int pw = g.getFontMetrics().stringWidth(prompt);
-            int px = (Game.GAME_WIDTH - pw) / 2;
-            int py = Game.GAME_HEIGHT - 80;
+            int px = (GameConfig.GAME_WIDTH - pw) / 2;
+            int py = GameConfig.GAME_HEIGHT - 80;
             g.drawString(prompt, px, py);
             String current = nameBuffer.toString();
             int cw = g.getFontMetrics().stringWidth(current + "_");
-            int cx = (Game.GAME_WIDTH - cw) / 2;
+            int cx = (GameConfig.GAME_WIDTH - cw) / 2;
             g.drawString(current + "_", cx, py + 30);
         }
     }
@@ -224,19 +228,19 @@ public class MainMenu {
     private void handleSelection(int choice) {
         switch (choice) {
         case 0:
-            game.setGameState(Game.GameState.PLAYING);
+            actions.onPlay();
             break;
         case 1: // Change Name
             startEditingName();
             break;
         case 2: // Select Level
-            game.setGameState(Game.GameState.LEVEL_SELECT);
+            actions.onOpenLevelSelect();
             break;
         case 3: // Leaderboard
-            game.setGameState(Game.GameState.LEADERBOARD);
+            actions.onOpenLeaderboard();
             break;
         case 4: // Quit
-            System.exit(0);
+            actions.onQuit();
             break;
         default:
             break;
@@ -246,7 +250,7 @@ public class MainMenu {
     private void startEditingName() {
         editingName = true;
         nameBuffer.setLength(0);
-        nameBuffer.append(game.getPlayerName());
+        nameBuffer.append(playerNameSupplier.get());
     }
 
     public boolean isEditingName() {
@@ -260,7 +264,7 @@ public class MainMenu {
 
         if (keyCode == java.awt.event.KeyEvent.VK_ENTER) {
             if (!nameBuffer.isEmpty()) {
-                game.setPlayerName(nameBuffer.toString());
+                actions.onSetPlayerName(nameBuffer.toString());
             }
             editingName = false;
             return;

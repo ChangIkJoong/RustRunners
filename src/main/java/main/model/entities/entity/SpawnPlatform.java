@@ -1,28 +1,21 @@
 package main.model.entities.entity;
 
-import java.awt.Graphics;
-import java.awt.image.BufferedImage;
-
 public class SpawnPlatform extends Entity {
     private static final long WAIT_AT_BOTTOM_MS = 300;
 
-    private float startY;
-    private float loweredY;
-    private float speed;
-    private BufferedImage sprite;
+    private final float startY;
+    private final float loweredY;
+    private final float speed;
     private boolean lowering = false;
     private boolean raising = false;
     private boolean atBottom = false;
     private long atBottomTime;
 
-    public SpawnPlatform(float x, float y, int width, int height, float lowerDistance,
-                         float speed, BufferedImage sprite) {
-
+    public SpawnPlatform(float x, float y, int width, int height, float lowerDistance, float speed) {
         super(x, y, width, height);
         this.startY = y;
         this.loweredY = y + lowerDistance;
         this.speed = speed;
-        this.sprite = sprite;
         initHitbox(x, y, width, height);
     }
 
@@ -59,15 +52,6 @@ public class SpawnPlatform extends Entity {
         return atBottom || raising;
     }
 
-    public void render(Graphics g) {
-        if (sprite != null) {
-            g.drawImage(sprite, (int) hitbox.x, (int) hitbox.y, (int) hitbox.width, (int) hitbox.height, null);
-        } else {
-            g.setColor(java.awt.Color.CYAN);
-            g.fillRect((int) hitbox.x, (int) hitbox.y, (int) hitbox.width, (int) hitbox.height);
-        }
-    }
-
     public boolean isAnimating() {
         return lowering || atBottom || raising;
     }
@@ -79,4 +63,3 @@ public class SpawnPlatform extends Entity {
         atBottom = false;
     }
 }
-

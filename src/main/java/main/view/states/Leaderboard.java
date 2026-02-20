@@ -5,111 +5,50 @@ import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
-import main.controller.Game;
+import main.model.leaderboard.ScoreEntry;
+import main.view.states.Actions.LeaderboardActions;
+import utilities.GameConfig;
 import utilities.LoadSave;
 
 public class Leaderboard {
-    private final Game game;
+
+    public interface LeaderboardDataSource {
+        List<ScoreEntry> loadEntriesForLevel(int levelIndex);
+
+        int getLevelCount();
+    }
+
+    private final LeaderboardActions actions;
+    private final LeaderboardDataSource dataSource;
     private final Font titleFont = new Font("Arial", Font.BOLD, 48);
     private final Font headerFont = new Font("Arial", Font.BOLD, 24);
     private final Font rowFont = new Font("Arial", Font.PLAIN, 20);
 
-    // Track which level's leaderboard is currently shown +1
     private int currentLevelIndex = 0;
     private BufferedImage backgroundImage;
 
-
-
-    public Leaderboard(Game game) {
-        this.game = game;
+    public Leaderboard(LeaderboardActions actions, LeaderboardDataSource dataSource) {
+        this.actions = actions;
+        this.dataSource = dataSource;
         loadBackgroundImage();
     }
 
     public void update() {
-        //old
     }
 
-    private static class Entry {
-        final String name;
-        final int level;
-        final int deaths;
-        final double time;
-
-        Entry(String name, int level, int deaths, double time) {
-            this.name = name;
-            this.level = level;
-            this.deaths = deaths;
-            this.time = time;
-        }
+    public void backToMenu() {
+        actions.onBackToMenu();
     }
 
-    private List<Entry> loadEntriesForLevel(int levelIndex) {
-        List<String> lines = LoadSave.readScoreFile();
-        List<Entry> entries = new ArrayList<>();
-        int levelNumber = levelIndex + 1;
-
-        for (String line : lines) {
-            // Skip empty lines
-            if (line.trim().isEmpty()) {
-                continue;
-            }
-
-            String[] parts = line.split(";");
-            if (parts.length < 4) {
-                continue;
-            }
-            try {
-                String name = parts[0].trim();
-                int level = Integer.parseInt(parts[1].trim());
-                int deaths = Integer.parseInt(parts[2].trim());
-                // Handle both dot and comma decimal separators
-                String timeStr = parts[3].trim().replace(",", ".");
-                double time = Double.parseDouble(timeStr);
-                if (level == levelNumber) {
-                    entries.add(new Entry(name, level, deaths, time));
-                }
-            } catch (NumberFormatException ignored) {
-                System.out.println("Failed to parse leaderboard line: " + line);
-            }
-        }
-
-        // score per - Fewest deaths & lowest time (in seconds)
-        entries.sort(Comparator.comparingInt((Entry e) -> e.deaths).thenComparingDouble(e -> e.time));
-
-        // Keep only top 5 for this level
-        if (entries.size() > 5) {
-            return new ArrayList<>(entries.subList(0, 5));
-        }
-        return entries;
-    }
-
-    //Switch the levels using keyboard in leaderboards
     public void nextLevel() {
-        int totalLevels = 1;
-
-        if (game != null) {
-            totalLevels = game.getLevelManager().getLevelCount();
-            if (totalLevels <= 0) {
-                totalLevels = 1;
-            }
-        }
-
+        int totalLevels = Math.max(1, dataSource.getLevelCount());
         currentLevelIndex = (currentLevelIndex + 1) % totalLevels;
     }
 
     public void previousLevel() {
-        int totalLevels = 1;
-
-        if (game != null) {
-            totalLevels = game.getLevelManager().getLevelCount();
-            if (totalLevels <= 0) {
-                totalLevels = 1;
-            }
-        }
+        int totalLevels = Math.max(1, dataSource.getLevelCount());
         currentLevelIndex = (currentLevelIndex - 1 + totalLevels) % totalLevels;
     }
 
@@ -119,22 +58,19 @@ public class Leaderboard {
 
     public void draw(Graphics g) {
         if (backgroundImage != null) {
-            g.drawImage(backgroundImage, 0, 0, Game.GAME_WIDTH, Game.GAME_HEIGHT, null);
+            g.drawImage(backgroundImage, 0, 0, GameConfig.GAME_WIDTH, GameConfig.GAME_HEIGHT, null);
         } else {
-            // Fallback if image not loaded
             g.setColor(Color.BLACK);
-            g.fillRect(0, 0, Game.GAME_WIDTH, Game.GAME_HEIGHT);
+            g.fillRect(0, 0, GameConfig.GAME_WIDTH, GameConfig.GAME_HEIGHT);
         }
 
-        //Current level
         g.setFont(titleFont);
         g.setColor(Color.WHITE);
         String title = "LEVEL " + (currentLevelIndex + 1);
         FontMetrics font = g.getFontMetrics();
-        int calculatedWidth = (Game.GAME_WIDTH - font.stringWidth(title)) / 2;
+        int calculatedWidth = (GameConfig.GAME_WIDTH - font.stringWidth(title)) / 2;
         g.drawString(title, calculatedWidth, 200);
 
-        //Left and Right arrows
         g.setFont(headerFont);
         String leftArrow = "<<";
         String rightArrow = ">>";
@@ -142,7 +78,6 @@ public class Leaderboard {
         g.drawString(leftArrow, calculatedWidth - 60, arrowY);
         g.drawString(rightArrow, calculatedWidth + font.stringWidth(title) + 40, arrowY);
 
-        // headers
         int startX = 300;
         int startY = 260;
         int headerCalculatedColumn = startX;
@@ -155,20 +90,19 @@ public class Leaderboard {
         g.drawString("DEATHS", headerCalculatedColumnDeaths, startY);
         g.drawString("TIME (s)", headerCalculatedColumnTime, startY);
 
-        // rows
         g.setFont(rowFont);
-        List<Entry> entries = loadEntriesForLevel(currentLevelIndex);
+        List<ScoreEntry> entries = dataSource.loadEntriesForLevel(currentLevelIndex);
         int rowY = startY + 30;
         for (int i = 0; i < entries.size(); i++) {
-            Entry e = entries.get(i);
+            ScoreEntry entry = entries.get(i);
             g.drawString(String.valueOf(i + 1), headerCalculatedColumn, rowY);
-            g.drawString(e.name, headerCalculatedColumnName, rowY);
-            g.drawString(String.valueOf(e.deaths), headerCalculatedColumnDeaths, rowY);
-            g.drawString(String.format("%.2f", e.time), headerCalculatedColumnTime, rowY);
+            g.drawString(entry.getPlayerName(), headerCalculatedColumnName, rowY);
+            g.drawString(String.valueOf(entry.getDeaths()), headerCalculatedColumnDeaths, rowY);
+            g.drawString(String.format("%.2f", entry.getTimeSeconds()), headerCalculatedColumnTime, rowY);
             rowY += 26;
         }
 
         g.setFont(new Font("Arial", Font.BOLD, 16));
-        g.drawString("Use LEFT or RIGHT to change level, ESC to return", 200, Game.GAME_HEIGHT - 170);
+        g.drawString("Use LEFT or RIGHT to change level, ESC to return", 200, GameConfig.GAME_HEIGHT - 170);
     }
 }

@@ -4,10 +4,6 @@ import java.awt.geom.Rectangle2D;
 import java.util.HashSet;
 import java.util.Set;
 
-import main.controller.Game;
-
-import static main.controller.Game.GAME_HEIGHT;
-
 public class HelpMethods {
 
     // transparent/passable
@@ -51,50 +47,50 @@ public class HelpMethods {
     }
 
     private static boolean checkIsSolid(float x, float y, int[][] lvlData) {
-        if (x < 0 || x >= Game.GAME_WIDTH) {
+        if (x < 0 || x >= GameConfig.GAME_WIDTH) {
             return true;
         }
-        if (y < 0 || y >= Game.GAME_HEIGHT) {
+        if (y < 0 || y >= GameConfig.GAME_HEIGHT) {
             return true;
         }
 
-        float xIndex = x / Game.TILES_SIZE;
-        float yIndex = y / Game.TILES_SIZE;
+        float xIndex = x / GameConfig.TILES_SIZE;
+        float yIndex = y / GameConfig.TILES_SIZE;
 
         int value = lvlData[(int) yIndex][(int) xIndex];
         return !NON_SOLID_TILES.contains(value);
     }
 
     public static float getEntityXPosNextToWall(Rectangle2D.Float hitbox, float xSpeed) {
-        int currentTile = (int) (hitbox.x / Game.TILES_SIZE);
+        int currentTile = (int) (hitbox.x / GameConfig.TILES_SIZE);
         if (xSpeed > 0) {
             //höger
-            int tileXPos = currentTile * Game.TILES_SIZE;
-            int xOffset = (int) (Game.TILES_SIZE - hitbox.width);
+            int tileXPos = currentTile * GameConfig.TILES_SIZE;
+            int xOffset = (int) (GameConfig.TILES_SIZE - hitbox.width);
             return tileXPos + xOffset - 1;
         } else {
             //vänster
-            return currentTile * Game.TILES_SIZE;
+            return currentTile * GameConfig.TILES_SIZE;
         }
     }
 
 
     public static float getEntityYPosUnderOrAbove(Rectangle2D.Float hitbox, float airSpeed) {
-        int currentTile = (int) (hitbox.y / Game.TILES_SIZE);
+        int currentTile = (int) (hitbox.y / GameConfig.TILES_SIZE);
         if (airSpeed > 0) {
             // faller / på mark
-            int tileYPos = currentTile * Game.TILES_SIZE;
-            int yOffset = (int) (Game.TILES_SIZE - hitbox.height);
+            int tileYPos = currentTile * GameConfig.TILES_SIZE;
+            int yOffset = (int) (GameConfig.TILES_SIZE - hitbox.height);
             return tileYPos + yOffset - 1;
         } else {
             // hoppar
-            return currentTile * Game.TILES_SIZE;
+            return currentTile * GameConfig.TILES_SIZE;
         }
     }
 
     public static boolean isEntityOnFloor(Rectangle2D.Float hitbox, int[][] lvlData) {
         //kolla pixel nere höger och vänster
-        if (hitbox.y + hitbox.height >= GAME_HEIGHT - 32) {
+        if (hitbox.y + hitbox.height >= GameConfig.GAME_HEIGHT - 32) {
             return false;
         }
         if (!checkIsSolid(hitbox.x, hitbox.y + hitbox.height + 1, lvlData)) {
@@ -107,7 +103,7 @@ public class HelpMethods {
     }
 
     public static boolean isEntityDead(Rectangle2D.Float hitbox, int[][] lvlData) {
-        if (hitbox.y + hitbox.height >= GAME_HEIGHT - 5) {
+        if (hitbox.y + hitbox.height >= GameConfig.GAME_HEIGHT - 5) {
             return true;
         }
         //implement collision with obstacle.
@@ -127,10 +123,10 @@ public class HelpMethods {
 
     public static boolean isOnLevelEnd(Rectangle2D.Float hitbox, int[][] lvlData) {
         // Check all corners of the hitbox for the level-end tile (45)
-        int leftTile = (int) (hitbox.x / Game.TILES_SIZE);
-        int rightTile = (int) ((hitbox.x + hitbox.width) / Game.TILES_SIZE);
-        int topTile = (int) (hitbox.y / Game.TILES_SIZE);
-        int bottomTile = (int) ((hitbox.y + hitbox.height) / Game.TILES_SIZE);
+        int leftTile = (int) (hitbox.x / GameConfig.TILES_SIZE);
+        int rightTile = (int) ((hitbox.x + hitbox.width) / GameConfig.TILES_SIZE);
+        int topTile = (int) (hitbox.y / GameConfig.TILES_SIZE);
+        int bottomTile = (int) ((hitbox.y + hitbox.height) / GameConfig.TILES_SIZE);
 
         // Bounds check
         if (leftTile < 0 || rightTile >= lvlData[0].length || topTile < 0 || bottomTile >= lvlData.length) {
@@ -151,20 +147,20 @@ public class HelpMethods {
 
     public static float findGroundY(float x, float y, int spriteHeight, int[][] lvlData) {
         // Align Y to grid
-        float alignedY = (float) (Math.floor(y / Game.TILES_SIZE) * Game.TILES_SIZE);
+        float alignedY = (float) (Math.floor(y / GameConfig.TILES_SIZE) * GameConfig.TILES_SIZE);
 
         // Create a temporary hitbox to check if already on ground
-        Rectangle2D.Float tempHitbox = new Rectangle2D.Float(x, alignedY, Game.TILES_SIZE, spriteHeight);
+        Rectangle2D.Float tempHitbox = new Rectangle2D.Float(x, alignedY, GameConfig.TILES_SIZE, spriteHeight);
         if (isEntityOnFloor(tempHitbox, lvlData)) {
             return alignedY; // Already on ground
         }
 
         // Search downward for the first solid tile
         float currentY = alignedY;
-        int maxSearch = (int) (Game.GAME_HEIGHT / Game.TILES_SIZE);
+        int maxSearch = (int) (GameConfig.GAME_HEIGHT / GameConfig.TILES_SIZE);
 
         for (int i = 0; i < maxSearch; i++) {
-            currentY += Game.TILES_SIZE;
+            currentY += GameConfig.TILES_SIZE;
             tempHitbox.y = currentY;
 
             if (isEntityOnFloor(tempHitbox, lvlData)) {
@@ -173,7 +169,7 @@ public class HelpMethods {
             }
 
             // Check if we've gone past the bottom of the level
-            if (currentY + spriteHeight >= GAME_HEIGHT - 1000) {
+            if (currentY + spriteHeight >= GameConfig.GAME_HEIGHT - 1000) {
                 // No valid ground found - would fall off screen
                 return -1;
             }

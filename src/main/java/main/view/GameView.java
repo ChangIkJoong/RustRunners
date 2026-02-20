@@ -8,6 +8,7 @@ import java.awt.image.BufferedImage;
 
 import main.model.GameModel;
 import main.view.render.LevelRenderer;
+import main.view.render.PlayerRenderer;
 
 public class GameView {
     private final GameModel model;
@@ -15,24 +16,23 @@ public class GameView {
     private final int gameHeight;
 
     private final LevelRenderer levelRenderer;
+    private final PlayerRenderer playerRenderer;
 
     public GameView(GameModel model, int gameWidth, int gameHeight) {
         this.model = model;
         this.gameWidth = gameWidth;
         this.gameHeight = gameHeight;
         this.levelRenderer = new LevelRenderer();
+        this.playerRenderer = new PlayerRenderer();
     }
 
     public void renderGame(Graphics g) {
-        // Level (view-side rendering)
         levelRenderer.renderBackgroundAndTerrain(g, model.getLevelManager());
         levelRenderer.renderObjectLayer(g, model.getLevelManager());
 
-        // Player
-        model.getPlayer().render(g);
+        playerRenderer.render(model.getPlayer(), g);
 
-        // Foreground/UI
-        model.getLevelManager().getCurrentLvl().drawSpawnPlatform(g);
+        levelRenderer.renderSpawnPlatform(g, model.getLevelManager().getCurrentLvl());
         drawHUD(g);
 
         if (model.isPaused()) {

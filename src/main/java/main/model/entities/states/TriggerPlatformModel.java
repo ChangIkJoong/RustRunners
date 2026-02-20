@@ -1,24 +1,19 @@
 package main.model.entities.states;
 
 import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
 public class TriggerPlatformModel {
 
-    // Geometry
     private Rectangle2D.Float hitbox;
 
     private float startX;
     private float startY;
     private float targetX;
     private float targetY;
-    private float offsetX;
-    private float offsetY;
     private float speed;
 
-    // Movement state
     private boolean triggered;
     private boolean reachedTarget;
     private boolean movingToTarget = true;
@@ -27,52 +22,27 @@ public class TriggerPlatformModel {
     private long waitStartTime;
     private long waitDurationMs = 1000;
 
-    // Platform properties
     private boolean solid;
     private boolean loop;
     private boolean shouldReturn;
 
-    // Sprite/meta (optional; renderer can still use these)
-    private BufferedImage sprite;
-    private int spriteWidth;
-    private float spriteHeight;
-    private float spriteOffsetX;
-    private float spriteOffsetY;
-
-    // Multi-tile
-    private List<float[]> tilePositions = new ArrayList<>();
-    private List<BufferedImage> tileSprites = new ArrayList<>();
+    private int firstTileSpriteId;
+    private final List<float[]> tilePositions = new ArrayList<>();
+    private final List<Integer> tileSpriteIds = new ArrayList<>();
     private float firstTileOffsetX;
     private float firstTileOffsetY;
 
-    // Original bounds
-    private float originalX;
-    private float originalY;
-    private int originalWidth;
-    private float originalHeight;
-
-    public TriggerPlatformModel(
-            Rectangle2D.Float hitbox, float startX, float startY,
-            float targetX, float targetY, float speed,
-            int spriteWidth, float spriteHeight,
-            BufferedImage sprite, boolean shouldReturn) {
+    public TriggerPlatformModel(Rectangle2D.Float hitbox, float startX, float startY,
+                                float targetX, float targetY, float speed,
+                                int firstTileSpriteId, boolean shouldReturn) {
         this.hitbox = hitbox;
         this.startX = startX;
         this.startY = startY;
         this.targetX = targetX;
         this.targetY = targetY;
-        this.offsetX = targetX - startX;
-        this.offsetY = targetY - startY;
         this.speed = speed;
-        this.spriteWidth = spriteWidth;
-        this.spriteHeight = spriteHeight;
-        this.sprite = sprite;
+        this.firstTileSpriteId = firstTileSpriteId;
         this.shouldReturn = shouldReturn;
-
-        this.originalX = startX;
-        this.originalY = startY;
-        this.originalWidth = spriteWidth;
-        this.originalHeight = spriteHeight;
     }
 
     public Rectangle2D.Float getHitbox() {
@@ -113,22 +83,6 @@ public class TriggerPlatformModel {
 
     public void setTargetY(float targetY) {
         this.targetY = targetY;
-    }
-
-    public float getOffsetX() {
-        return offsetX;
-    }
-
-    public void setOffsetX(float offsetX) {
-        this.offsetX = offsetX;
-    }
-
-    public float getOffsetY() {
-        return offsetY;
-    }
-
-    public void setOffsetY(float offsetY) {
-        this.offsetY = offsetY;
     }
 
     public float getSpeed() {
@@ -211,60 +165,20 @@ public class TriggerPlatformModel {
         this.shouldReturn = shouldReturn;
     }
 
-    public BufferedImage getSprite() {
-        return sprite;
+    public int getFirstTileSpriteId() {
+        return firstTileSpriteId;
     }
 
-    public void setSprite(BufferedImage sprite) {
-        this.sprite = sprite;
-    }
-
-    public int getSpriteWidth() {
-        return spriteWidth;
-    }
-
-    public void setSpriteWidth(int spriteWidth) {
-        this.spriteWidth = spriteWidth;
-    }
-
-    public float getSpriteHeight() {
-        return spriteHeight;
-    }
-
-    public void setSpriteHeight(float spriteHeight) {
-        this.spriteHeight = spriteHeight;
-    }
-
-    public float getSpriteOffsetX() {
-        return spriteOffsetX;
-    }
-
-    public void setSpriteOffsetX(float spriteOffsetX) {
-        this.spriteOffsetX = spriteOffsetX;
-    }
-
-    public float getSpriteOffsetY() {
-        return spriteOffsetY;
-    }
-
-    public void setSpriteOffsetY(float spriteOffsetY) {
-        this.spriteOffsetY = spriteOffsetY;
+    public void setFirstTileSpriteId(int firstTileSpriteId) {
+        this.firstTileSpriteId = firstTileSpriteId;
     }
 
     public List<float[]> getTilePositions() {
         return tilePositions;
     }
 
-    public void setTilePositions(List<float[]> tilePositions) {
-        this.tilePositions = tilePositions;
-    }
-
-    public List<BufferedImage> getTileSprites() {
-        return tileSprites;
-    }
-
-    public void setTileSprites(List<BufferedImage> tileSprites) {
-        this.tileSprites = tileSprites;
+    public List<Integer> getTileSpriteIds() {
+        return tileSpriteIds;
     }
 
     public float getFirstTileOffsetX() {
@@ -283,46 +197,8 @@ public class TriggerPlatformModel {
         this.firstTileOffsetY = firstTileOffsetY;
     }
 
-    public float getOriginalX() {
-        return originalX;
-    }
-
-    public void setOriginalX(float originalX) {
-        this.originalX = originalX;
-    }
-
-    public float getOriginalY() {
-        return originalY;
-    }
-
-    public void setOriginalY(float originalY) {
-        this.originalY = originalY;
-    }
-
-    public int getOriginalWidth() {
-        return originalWidth;
-    }
-
-    public void setOriginalWidth(int originalWidth) {
-        this.originalWidth = originalWidth;
-    }
-
-    public float getOriginalHeight() {
-        return originalHeight;
-    }
-
-    public void setOriginalHeight(float originalHeight) {
-        this.originalHeight = originalHeight;
-    }
-
-    public void addTile(float relX, float relY, BufferedImage tileSprite) {
+    public void addTile(float relX, float relY, int tileSpriteId) {
         tilePositions.add(new float[]{relX, relY});
-        tileSprites.add(tileSprite);
-    }
-
-    public void moveHitbox(float deltaX, float deltaY) {
-        hitbox.x += deltaX;
-        hitbox.y += deltaY;
+        tileSpriteIds.add(tileSpriteId);
     }
 }
-

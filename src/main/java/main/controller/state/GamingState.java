@@ -1,11 +1,10 @@
-package main.view.interfaces;
+package main.controller.state;
 
 import java.awt.Graphics;
 
 import audio.controller.AudioController;
 import main.controller.Game;
 
-//State responsible for gameplay (levels, player, HUD, pause, transitions)
 public class GamingState extends GameBaseState {
 
     public GamingState(Game game) {
@@ -20,8 +19,8 @@ public class GamingState extends GameBaseState {
     @Override
     public void onEnter() {
         AudioController controller = AudioController.getInstance();
-        AudioController.getInstance().stopAll();
-        AudioController.getInstance().playRespawn();
+        controller.stopAll();
+        controller.playRespawn();
         controller.playGameMusic();
     }
 

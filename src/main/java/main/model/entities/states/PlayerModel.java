@@ -2,7 +2,7 @@ package main.model.entities.states;
 
 import java.awt.geom.Rectangle2D;
 
-import main.controller.Game;
+import utilities.GameConfig;
 import main.model.entities.entity.Player;
 
 import static utilities.Constants.PlayerConstants.IDLE_RIGHT;
@@ -29,9 +29,9 @@ public class PlayerModel {
     //physics TODO maybe move this to a utilz?
     private float playerSpeed = 1.0f;
     private float airSpeed;
-    private float gravity = 0.04f * Game.SCALE;
+    private float gravity = 0.04f * GameConfig.SCALE;
     private float jumpSpeed = -2.5f;
-    private float fallSpeedAfterCollision = 0.5f * Game.SCALE;
+    private float fallSpeedAfterCollision = 0.5f * GameConfig.SCALE;
 
     //spawn/state
     private float spawnX;

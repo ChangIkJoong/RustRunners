@@ -20,15 +20,15 @@ import main.controller.inputs.commands.TogglePauseCommand;
 public class KeyboardInputs implements KeyListener {
 
     private final IGameActions actions;
-    private final IGameRead game;
+    private final IGameRead read;
     private boolean keyDown = false;
 
     private final Map<Integer, Command> pressedCommands = new HashMap<>();
     private final Map<Integer, Command> releasedCommands = new HashMap<>();
 
-    public KeyboardInputs(IGameActions actions, IGameRead game) {
+    public KeyboardInputs(IGameActions actions, IGameRead read) {
         this.actions = actions;
-        this.game = game;
+        this.read = read;
         initCommands();
     }
 
@@ -72,9 +72,7 @@ public class KeyboardInputs implements KeyListener {
     }
 
     private boolean isEditingName() {
-        return game.getGameState() == main.controller.Game.GameState.MENU &&
-               game.getMainMenu() != null &&
-               game.getMainMenu().isEditingName();
+        return read.getGameState() == main.controller.Game.GameState.MENU && read.isEditingPlayerName();
     }
 
     private boolean isJumpKey(int keyCode) {
@@ -87,7 +85,7 @@ public class KeyboardInputs implements KeyListener {
     public void keyTyped(KeyEvent e) {
         // when editing name in main menu, collect characters here
         if (isEditingName()) {
-            game.getMainMenu().handleNameKeyPressed(0, e.getKeyChar());
+            actions.menuNameTyped(e.getKeyChar());
         }
     }
 
@@ -96,7 +94,7 @@ public class KeyboardInputs implements KeyListener {
         if (isEditingName()) {
             int code = e.getKeyCode();
             if (code == KeyEvent.VK_ENTER || code == KeyEvent.VK_ESCAPE || code == KeyEvent.VK_BACK_SPACE) {
-                game.getMainMenu().handleNameKeyPressed(code, '\0');
+                actions.menuNameControlKey(code);
             }
             return;
         }
@@ -104,16 +102,12 @@ public class KeyboardInputs implements KeyListener {
         int keyCode = e.getKeyCode();
 
         // LEFT/RIGHT navigation for leaderboarding...
-        if (game.getGameState() == main.controller.Game.GameState.LEADERBOARD) {
+        if (read.getGameState() == main.controller.Game.GameState.LEADERBOARD) {
             if (keyCode == KeyEvent.VK_LEFT) {
-                if (game.getLeaderboard() != null) {
-                    game.getLeaderboard().previousLevel();
-                }
+                actions.leaderboardPreviousLevel();
                 return;
             } else if (keyCode == KeyEvent.VK_RIGHT) {
-                if (game.getLeaderboard() != null) {
-                    game.getLeaderboard().nextLevel();
-                }
+                actions.leaderboardNextLevel();
                 return;
             }
         }
@@ -121,7 +115,7 @@ public class KeyboardInputs implements KeyListener {
         //TODO, abstract this to the key in the command, or put it into a listener. choices..
         // Play jump sound once per press
         if (isJumpKey(keyCode) && !keyDown) {
-            game.getAudioController().playJump();
+            actions.playJumpSound();
             keyDown = true;
         }
 

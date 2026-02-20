@@ -2,29 +2,29 @@ package main.model.entities.entity;
 
 import main.model.entities.states.TriggerSpikeModel;
 
-import java.awt.Graphics;
-import java.awt.image.BufferedImage;
-
 public class TriggerSpike extends Entity {
 
     private final TriggerSpikeModel model;
 
     public TriggerSpike(float x, float y, float targetX, float targetY, int width, int height,
-                        float speed, float triggerDistance, BufferedImage sprite, boolean shouldReturn, int id,
+                        float speed, float triggerDistance, int spriteId, boolean shouldReturn, int id,
                         int collisionWidth, int collisionHeight) {
         super(x, y, width, height);
 
-        // Calculate centered collision box relative to tile
         int xOffset = (width - collisionWidth) / 2;
         int yOffset = (height - collisionHeight) / 2;
         initHitbox(x + xOffset, y + yOffset, collisionWidth, collisionHeight);
 
         this.model = new TriggerSpikeModel(hitbox, x, y, targetX, targetY,
-                speed, triggerDistance, sprite, shouldReturn, id);
+                speed, triggerDistance, spriteId, shouldReturn, id);
     }
 
     public int getId() {
         return model.getId();
+    }
+
+    public int getSpriteId() {
+        return model.getSpriteId();
     }
 
     public void update() {
@@ -61,16 +61,6 @@ public class TriggerSpike extends Entity {
         } else {
             hitbox.x += (dx / dist) * speed;
             hitbox.y += (dy / dist) * speed;
-        }
-    }
-
-    public void render(Graphics g) {
-        if (model.getSprite() != null) {
-            g.drawImage(model.getSprite(), (int) hitbox.x, (int) (hitbox.y - hitbox.height),
-                    (int) hitbox.width, (int) (hitbox.height * 2), null);
-        } else {
-            g.setColor(java.awt.Color.MAGENTA);
-            g.fillRect((int) hitbox.x, (int) hitbox.y, (int) hitbox.width, (int) hitbox.height);
         }
     }
 

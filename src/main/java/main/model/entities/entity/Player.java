@@ -1,11 +1,7 @@
 package main.model.entities.entity;
 
-import java.awt.Graphics;
-import java.awt.image.BufferedImage;
-
-import main.controller.Game;
+import utilities.GameConfig;
 import main.model.entities.states.PlayerModel;
-import utilities.LoadSave;
 
 import static utilities.Constants.PlayerConstants.IDLE_LEFT;
 import static utilities.Constants.PlayerConstants.IDLE_RIGHT;
@@ -26,18 +22,11 @@ public class Player extends Entity {
     private static final long RESPAWN_DELAY_MS = 500;
 
     private final PlayerModel model;
-
-    private BufferedImage[][] animation;
-
     private main.model.levels.Level currentLevel;
-
-    private final float xDrawOffset = 9.5f * Game.SCALE;
-    private final float yDrawOffset = 8.25f * Game.SCALE;
 
     public Player(float x, float y, int width, int height) {
         super(x, y, width, height);
-        loadAnimatons();
-        initHitbox(x, y, 12 * Game.SCALE, 22 * Game.SCALE);
+        initHitbox(x, y, 12 * GameConfig.SCALE, 22 * GameConfig.SCALE);
         this.model = new PlayerModel(hitbox, x, y);
     }
 
@@ -73,11 +62,10 @@ public class Player extends Entity {
         model.setDeathTime(System.currentTimeMillis());
 
         if (currentLevel != null) {
-            BufferedImage deathSprite = LoadSave.getSpriteAtlas(LoadSave.PLAYER_DEAD);
-            currentLevel.recordDeathPosition(hitbox.x - xDrawOffset, hitbox.y - yDrawOffset, deathSprite);
+            currentLevel.recordDeathPosition(hitbox.x, hitbox.y);
         }
 
-        // Keep the previous visual behavior (hide player) but no longer rely on it as the death signal.
+        // Keep previous gameplay behavior where dead player is hidden until respawn.
         hitbox.x = 2000;
         hitbox.y = 2000;
 
@@ -187,8 +175,6 @@ public class Player extends Entity {
         }
     }
 
-    // Getters & Setters ------------------------
-
     public boolean hasReachedLevelEnd() {
         return model.hasReachedLevelEnd();
     }
@@ -230,11 +216,16 @@ public class Player extends Entity {
         model.setJump(jump);
     }
 
-    /**
-     * Explicit death state query; do not infer death from coordinates.
-     */
     public boolean isDead() {
         return model.isDead();
+    }
+
+    public int getPlayerAction() {
+        return model.getPlayerAction();
+    }
+
+    public int getAniIndex() {
+        return model.getAniIndex();
     }
 
     public void setCurrentLevel(main.model.levels.Level level) {
@@ -265,24 +256,6 @@ public class Player extends Entity {
 
         int[][] lvlData = model.getLvlData();
         model.setInAir(lvlData != null && !isEntityOnFloor(hitbox, lvlData));
-    }
-
-    // Rendering---------------------------------------
-
-    public void render(Graphics g) {
-        g.drawImage(animation[model.getPlayerAction()][model.getAniIndex()],
-                (int) (hitbox.x - xDrawOffset),
-                (int) (hitbox.y - yDrawOffset), width, height, null);
-    }
-
-    private void loadAnimatons() {
-        BufferedImage img = LoadSave.getSpriteAtlas(LoadSave.PLAYER_ATLAS);
-        animation = new BufferedImage[4][8];
-        for (int j = 0; j < animation.length; j++) {
-            for (int i = 0; i < animation[j].length; i++) {
-                animation[j][i] = img.getSubimage(i * 32, j * 32, 32, 32);
-            }
-        }
     }
 
     private void setAnimation() {

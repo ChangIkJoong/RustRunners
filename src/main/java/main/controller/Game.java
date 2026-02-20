@@ -2,42 +2,50 @@ package main.controller;
 
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
+import java.util.List;
 
-import main.model.levels.LevelManager;
-import main.model.levels.LevelManagerHost;
 import audio.controller.AudioController;
-import main.model.entities.entity.Player;
+import main.controller.facades.IGameActions;
+import main.controller.facades.IGameRead;
+import main.controller.inputs.KeyboardInputs;
+import main.controller.inputs.MouseInputs;
 import main.model.GameModel;
+import main.model.entities.entity.Player;
+import main.model.leaderboard.LeaderboardService;
+import main.model.leaderboard.ScoreEntry;
+import main.model.levels.LevelManager;
 import main.model.observerEvents.GameObserver;
-import main.view.interfaces.GameBaseState;
-import main.view.interfaces.GamingState;
-import main.view.interfaces.LeaderboardState;
-import main.view.interfaces.LevelSelectState;
-import main.view.interfaces.MenuState;
-import main.view.states.Leaderboard;
-import main.view.states.LevelSelect;
-import main.view.states.MainMenu;
-
 import main.view.GamePanel;
 import main.view.GameView;
 import main.view.GameWindow;
+import main.controller.state.GameBaseState;
+import main.controller.state.GamingState;
+import main.controller.state.LeaderboardState;
+import main.controller.state.LevelSelectState;
+import main.controller.state.MenuState;
+import main.view.states.Actions.LeaderboardActions;
+import main.view.states.Actions.LevelSelectActions;
+import main.view.states.Actions.MainMenuActions;
+import main.view.states.Leaderboard;
+import main.view.states.LevelSelect;
+import main.view.states.MainMenu;
+import utilities.GameConfig;
 import utilities.LoadSave;
-import main.controller.facades.IGameActions;
-import main.controller.facades.IGameRead;
 
-public class Game implements Runnable, GameObserver, IGameActions, IGameRead, LevelManagerHost {
+public class Game implements Runnable, GameObserver, IGameActions, IGameRead,
+        MainMenuActions, LevelSelectActions, LeaderboardActions {
 
-    public static final int TILES_DEAFULT_SIZE = 32;
-    public static final float SCALE = 1.0f;
-    public static final int TILES_IN_WIDTH = 40;
-    public static final int TILES_IN_HEIGHT = 25;
-    public static final int TILES_SIZE = (int) (TILES_DEAFULT_SIZE * SCALE);
-    public static final int GAME_WIDTH = TILES_SIZE * TILES_IN_WIDTH;
-    public static final int GAME_HEIGHT = TILES_SIZE * TILES_IN_HEIGHT;
+    public static final int TILES_DEAFULT_SIZE = GameConfig.TILES_DEFAULT_SIZE;
+    public static final float SCALE = GameConfig.SCALE;
+    public static final int TILES_IN_WIDTH = GameConfig.TILES_IN_WIDTH;
+    public static final int TILES_IN_HEIGHT = GameConfig.TILES_IN_HEIGHT;
+    public static final int TILES_SIZE = GameConfig.TILES_SIZE;
+    public static final int GAME_WIDTH = GameConfig.GAME_WIDTH;
+    public static final int GAME_HEIGHT = GameConfig.GAME_HEIGHT;
 
-    public MainMenu mainMenu;
-    public Leaderboard leaderboard;
-    public LevelSelect levelSelect;
+    private MainMenu mainMenu;
+    private Leaderboard leaderboard;
+    private LevelSelect levelSelect;
 
     private GamePanel gamePanel;
     private GameWindow gameWindow;
@@ -45,13 +53,13 @@ public class Game implements Runnable, GameObserver, IGameActions, IGameRead, Le
     private final int FPS_SET = 120;
     private final int UPS_SET = 200;
 
-    //MVC Components
     private GameModel model;
     private GameView view;
 
     private Player player;
     private LevelManager levelManager;
     private AudioController audioController;
+    private final LeaderboardService leaderboardService = new LeaderboardService();
 
     public enum GameState {MENU, PLAYING, LEADERBOARD, LEVEL_SELECT}
 
@@ -72,7 +80,12 @@ public class Game implements Runnable, GameObserver, IGameActions, IGameRead, Le
         if (currentState != null) {
             currentState.onEnter();
         }
+
         gamePanel = new GamePanel(this);
+        KeyboardInputs keyboardInputs = new KeyboardInputs(this, this);
+        MouseInputs mouseInputs = new MouseInputs(this);
+        gamePanel.attachInputListeners(keyboardInputs, mouseInputs, mouseInputs);
+
         gameWindow = new GameWindow(gamePanel);
         gamePanel.requestFocus();
 
@@ -80,23 +93,31 @@ public class Game implements Runnable, GameObserver, IGameActions, IGameRead, Le
     }
 
     private void initClasses() {
-        //Initialize Data/Logic (Model parts)
-        levelManager = new LevelManager(this);
-        player = new Player(200, 550, (int) (32 * SCALE), (int) (32 * SCALE));
+        levelManager = new LevelManager();
+        levelManager.setAudioController(audioController);
 
+        player = new Player(200, 550, (int) (32 * SCALE), (int) (32 * SCALE));
         loadPlayerForCurrentLevel();
 
-        //Setup MVC
         model = new GameModel(player, levelManager);
-        model.addObserver(this); //Controller listens to Model
+        model.addObserver(this);
 
         view = new GameView(model, GAME_WIDTH, GAME_HEIGHT);
-
         transitionImage = LoadSave.getSpriteAtlas(LoadSave.TRANSITION_IMG);
 
-        mainMenu = new MainMenu(this);
+        mainMenu = new MainMenu(this, model::getPlayerName);
         levelSelect = new LevelSelect(this, levelManager);
-        leaderboard = new Leaderboard(this);
+        leaderboard = new Leaderboard(this, new Leaderboard.LeaderboardDataSource() {
+            @Override
+            public List<ScoreEntry> loadEntriesForLevel(int levelIndex) {
+                return leaderboardService.loadEntriesForLevel(levelIndex);
+            }
+
+            @Override
+            public int getLevelCount() {
+                return levelManager.getLevelCount();
+            }
+        });
 
         gamingState = new GamingState(this);
         menuState = new MenuState(this);
@@ -106,12 +127,9 @@ public class Game implements Runnable, GameObserver, IGameActions, IGameRead, Le
         currentState = menuState;
     }
 
-    //OBSERVER IMPLEMENTATION
-
     @Override
     public void onPlayerDied() {
         audioController.playDead();
-        //update Environment
         levelManager.getCurrentLvl().triggerSpawnPlatform();
     }
 
@@ -124,21 +142,21 @@ public class Game implements Runnable, GameObserver, IGameActions, IGameRead, Le
     @Override
     public void onLevelCompleted() {
         model.recordLevelCompletion();
-        //Audio feedback remains a controller concern
         audioController.playNextLevel();
     }
 
     @Override
     public void onLevelLoadRequested() {
-        //Called when transition covers the screen
     }
 
     @Override
     public void onTransitionComplete() {
-        //Transition animation finished
     }
 
-    //-------------------------------------------
+    @Override
+    public void onRunCompleted() {
+        setGameState(GameState.MENU);
+    }
 
     private void loadPlayerForCurrentLevel() {
         main.model.levels.Level currentLevel = levelManager.getCurrentLvl();
@@ -150,15 +168,8 @@ public class Game implements Runnable, GameObserver, IGameActions, IGameRead, Le
         currentLevel.clearDeathPositions();
     }
 
-    @Override
-    public void reloadPlayerCurrentLevel() {
-        loadPlayerForCurrentLevel();
-    }
-
     private void update() {
-        //Update Model (Rules & Physics)
         model.update();
-        //Update Current State (Input/UI)
         currentState.update();
     }
 
@@ -215,7 +226,6 @@ public class Game implements Runnable, GameObserver, IGameActions, IGameRead, Le
         }
     }
 
-    //Getters & Setters-------------
     public Player getPlayer() {
         return player;
     }
@@ -224,12 +234,25 @@ public class Game implements Runnable, GameObserver, IGameActions, IGameRead, Le
         player.resetDirBooleans();
     }
 
+    @Override
     public GameState getGameState() {
         return gameState;
     }
 
     public AudioController getAudioController() {
         return audioController;
+    }
+
+    public MainMenu getMainMenuView() {
+        return mainMenu;
+    }
+
+    public Leaderboard getLeaderboardView() {
+        return leaderboard;
+    }
+
+    public LevelSelect getLevelSelectView() {
+        return levelSelect;
     }
 
     public String getPlayerName() {
@@ -284,18 +307,11 @@ public class Game implements Runnable, GameObserver, IGameActions, IGameRead, Le
         return model.getLevelManager();
     }
 
-    // IGameRead
     @Override
-    public MainMenu getMainMenu() {
-        return mainMenu;
+    public boolean isEditingPlayerName() {
+        return mainMenu != null && mainMenu.isEditingName();
     }
 
-    @Override
-    public Leaderboard getLeaderboard() {
-        return leaderboard;
-    }
-
-    // IGameActions
     @Override
     public void moveLeftPressed() {
         player.setLeft(true);
@@ -329,5 +345,111 @@ public class Game implements Runnable, GameObserver, IGameActions, IGameRead, Le
     @Override
     public void goToMenu() {
         setGameState(GameState.MENU);
+    }
+
+    @Override
+    public void playJumpSound() {
+        audioController.playJump();
+    }
+
+    @Override
+    public void leaderboardNextLevel() {
+        if (leaderboard != null) {
+            leaderboard.nextLevel();
+        }
+    }
+
+    @Override
+    public void leaderboardPreviousLevel() {
+        if (leaderboard != null) {
+            leaderboard.previousLevel();
+        }
+    }
+
+    @Override
+    public void menuNameTyped(char c) {
+        if (mainMenu != null) {
+            mainMenu.handleNameKeyPressed(0, c);
+        }
+    }
+
+    @Override
+    public void menuNameControlKey(int keyCode) {
+        if (mainMenu != null) {
+            mainMenu.handleNameKeyPressed(keyCode, '\0');
+        }
+    }
+
+    @Override
+    public void mouseMoved(int x, int y) {
+        if (gameState == GameState.MENU && mainMenu != null) {
+            mainMenu.mouseMoved(x, y);
+        } else if (gameState == GameState.LEVEL_SELECT && levelSelect != null) {
+            levelSelect.mouseMoved(x, y);
+        }
+    }
+
+    @Override
+    public void mousePressed(int x, int y) {
+        if (gameState == GameState.MENU && mainMenu != null) {
+            mainMenu.mousePressed(x, y);
+        } else if (gameState == GameState.LEVEL_SELECT && levelSelect != null) {
+            levelSelect.mousePressed(x, y);
+        }
+    }
+
+    @Override
+    public void mouseReleased(int x, int y) {
+        if (gameState == GameState.MENU && mainMenu != null) {
+            mainMenu.mouseReleased(x, y);
+        } else if (gameState == GameState.LEVEL_SELECT && levelSelect != null) {
+            levelSelect.mouseReleased(x, y);
+        }
+    }
+
+    @Override
+    public void onPlay() {
+        setGameState(GameState.PLAYING);
+    }
+
+    @Override
+    public void onOpenLevelSelect() {
+        setGameState(GameState.LEVEL_SELECT);
+    }
+
+    @Override
+    public void onOpenLeaderboard() {
+        setGameState(GameState.LEADERBOARD);
+    }
+
+    @Override
+    public void onQuit() {
+        System.exit(0);
+    }
+
+    @Override
+    public void onSetPlayerName(String name) {
+        setPlayerName(name);
+    }
+
+    @Override
+    public void onBackToMenu() {
+        setGameState(GameState.MENU);
+    }
+
+    @Override
+    public void onSelectLevel(int levelIndex) {
+        levelManager.setCurrentLevelIndex(levelIndex);
+        setGameState(GameState.PLAYING);
+    }
+
+    @Override
+    public void onNextLevel() {
+        leaderboardNextLevel();
+    }
+
+    @Override
+    public void onPreviousLevel() {
+        leaderboardPreviousLevel();
     }
 }

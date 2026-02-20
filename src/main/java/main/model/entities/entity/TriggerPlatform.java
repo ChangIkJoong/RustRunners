@@ -1,56 +1,68 @@
 package main.model.entities.entity;
 
-import java.awt.Graphics;
-import java.awt.image.BufferedImage;
+import java.util.List;
 
 import audio.controller.AudioController;
-import main.controller.Game;
 import main.model.entities.states.TriggerPlatformModel;
 
 public class TriggerPlatform extends Entity {
 
     private final TriggerPlatformModel model;
 
-    //sprite hitbox object to avoid creating garbage
+    // Sprite hitbox object to avoid creating garbage.
     private final java.awt.geom.Rectangle2D.Float cachedSpriteHitbox = new java.awt.geom.Rectangle2D.Float();
 
-    //Audio controller
     private AudioController audioController;
 
     public TriggerPlatform(float x, float y, float targetX, float targetY,
-                           int width, int height, float speed, BufferedImage sprite,
+                           int width, int height, float speed, int firstTileSpriteId,
                            boolean shouldReturn) {
 
         super(x, y, width, height);
         initHitbox(x, y, width, height);
 
         this.model = new TriggerPlatformModel(
-                hitbox, x, y, targetX, targetY, speed, width, height,
-                sprite, shouldReturn
+                hitbox, x, y, targetX, targetY, speed, firstTileSpriteId, shouldReturn
         );
     }
 
     private static final class Destination {
         final float x;
         final float y;
-        final boolean toTarget;
 
-        Destination(float x, float y, boolean toTarget) {
+        Destination(float x, float y) {
             this.x = x;
             this.y = y;
-            this.toTarget = toTarget;
         }
     }
 
-    //offset of the first tile sprite within the box
     public void setFirstTileOffset(float offsetX, float offsetY) {
         model.setFirstTileOffsetX(offsetX);
         model.setFirstTileOffsetY(offsetY);
     }
 
-    //add tile to this platform ,position is the bounding box: TOP LEFT
-    public void addTile(float relX, float relY, BufferedImage tileSprite) {
-        model.addTile(relX, relY, tileSprite);
+    public float getFirstTileOffsetX() {
+        return model.getFirstTileOffsetX();
+    }
+
+    public float getFirstTileOffsetY() {
+        return model.getFirstTileOffsetY();
+    }
+
+    public int getFirstTileSpriteId() {
+        return model.getFirstTileSpriteId();
+    }
+
+    public void addTile(float relX, float relY, int tileSpriteId) {
+        model.addTile(relX, relY, tileSpriteId);
+    }
+
+    public List<float[]> getTilePositions() {
+        return model.getTilePositions();
+    }
+
+    public List<Integer> getTileSpriteIds() {
+        return model.getTileSpriteIds();
     }
 
     public void setLoop(boolean loop) {
@@ -85,7 +97,7 @@ public class TriggerPlatform extends Entity {
         boolean toTarget = model.isMovingToTarget();
         float x = toTarget ? model.getTargetX() : model.getStartX();
         float y = toTarget ? model.getTargetY() : model.getStartY();
-        return new Destination(x, y, toTarget);
+        return new Destination(x, y);
     }
 
     private void moveOrArrive(float destX, float destY) {
@@ -130,9 +142,6 @@ public class TriggerPlatform extends Entity {
         }
 
         model.setReachedTarget(true);
-
-        //if (!shouldReturn || !toTarget) {
-        //    model.setReachedTarget(true);
     }
 
     private void startWait() {
@@ -140,13 +149,12 @@ public class TriggerPlatform extends Entity {
         model.setWaitStartTime(System.currentTimeMillis());
     }
 
-    // Check if player is touching this platform
     public boolean checkPlayerCollision(Entity player) {
         return hitbox.intersects(player.getHitbox());
     }
 
     public void trigger() {
-        if (!model.isTriggered()) { // Only play sound on first trigger
+        if (!model.isTriggered()) {
             model.setTriggered(true);
             if (audioController != null) {
                 audioController.playPlatformSound();
@@ -167,12 +175,7 @@ public class TriggerPlatform extends Entity {
         model.setWaitingAtTarget(false);
     }
 
-    public void setSprite(BufferedImage sprite) {
-        model.setSprite(sprite);
-    }
-
     public void setHitboxSize(int hitboxWidth, int hitboxHeight, int newX, int newY) {
-        // Calculate offset from old position
         float offsetX = newX - hitbox.x;
         float offsetY = newY - hitbox.y;
 
@@ -184,7 +187,6 @@ public class TriggerPlatform extends Entity {
         model.setStartX(newX);
         model.setStartY(newY);
 
-        // Also update target to maintain the same movement offset
         model.setTargetX(model.getTargetX() + offsetX);
         model.setTargetY(model.getTargetY() + offsetY);
     }
@@ -201,10 +203,7 @@ public class TriggerPlatform extends Entity {
         this.audioController = audioController;
     }
 
-    // Get the sprite hitbox (the actual collidable area for standing)
     public java.awt.geom.Rectangle2D.Float getSpriteHitbox() {
-        // Sprite area is centered in hitbox (hitbox is 1.5x sprite area)
-        // Sprite = hitbox / 1.5 = hitbox * 2/3, offset = hitbox / 6
         float spriteAreaW = hitbox.width * 2f / 3f;
         float spriteAreaH = hitbox.height * 2f / 3f;
         float spriteAreaX = hitbox.x + hitbox.width / 6f;
@@ -228,38 +227,4 @@ public class TriggerPlatform extends Entity {
         Destination dest = getCurrentDestination();
         moveOrArrive(dest.x, dest.y);
     }
-
-    public void render(Graphics g) {
-        int tileSize = Game.TILES_SIZE;
-
-        // Sprite area is centered in the hitbox (hitbox is 1.5x the sprite area)
-        float spriteAreaX = hitbox.x + hitbox.width / 6f;
-        float spriteAreaY = hitbox.y + hitbox.height / 6f;
-
-        // Draw first tile sprite at its offset within the sprite area
-        int firstX = (int) (spriteAreaX + model.getFirstTileOffsetX());
-        int firstY = (int) (spriteAreaY + model.getFirstTileOffsetY());
-
-        if (model.getSprite() != null) {
-            g.drawImage(model.getSprite(), firstX, firstY, tileSize, tileSize, null);
-        } else {
-            g.setColor(java.awt.Color.ORANGE);
-            g.fillRect(firstX, firstY, tileSize, tileSize);
-        }
-
-        // Draw additional tiles relative to sprite area top-left
-        for (int i = 0; i < model.getTilePositions().size(); i++) {
-            float[] pos = model.getTilePositions().get(i);
-            int tileX = (int) (spriteAreaX + pos[0]);
-            int tileY = (int) (spriteAreaY + pos[1]);
-            BufferedImage tileSprite = model.getTileSprites().get(i);
-            if (tileSprite != null) {
-                g.drawImage(tileSprite, tileX, tileY, tileSize, tileSize, null);
-            }
-        }
-        // Uncomment to debug hitbox:
-        //g.setColor(java.awt.Color.RED);
-        //g.drawRect((int)hitbox.x, (int)hitbox.y, (int)hitbox.width, (int)hitbox.height);
-    }
 }
-

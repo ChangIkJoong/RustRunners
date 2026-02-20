@@ -1,29 +1,28 @@
-package main.view.interfaces;
+package main.controller.state;
 
 import java.awt.Graphics;
 
 import audio.controller.AudioController;
 import main.controller.Game;
 
-//level selection screen
-public class LevelSelectState extends GameBaseState {
+public class MenuState extends GameBaseState {
 
-    public LevelSelectState(Game game) {
+    public MenuState(Game game) {
         super(game);
     }
 
     @Override
     public void update() {
-        game.levelSelect.update();
+        game.getMainMenuView().update();
     }
 
     @Override
     public void render(Graphics g) {
-        game.levelSelect.draw(g);
+        game.getMainMenuView().draw(g);
     }
 
     @Override
     public void onEnter() {
-        AudioController.getInstance().playJump();
+        AudioController.getInstance().playMenuMusic();
     }
 }

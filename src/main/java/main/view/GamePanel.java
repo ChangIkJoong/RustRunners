@@ -2,30 +2,36 @@ package main.view;
 
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 
 import javax.swing.JPanel;
 
-import main.controller.facades.IGameRead;
-import main.controller.inputs.KeyboardInputs;
-import main.controller.inputs.MouseInputs;
 import main.controller.Game;
-import main.controller.facades.IGameActions;
 
 import static main.controller.Game.GAME_HEIGHT;
 import static main.controller.Game.GAME_WIDTH;
 
 public class GamePanel extends JPanel {
-    private MouseInputs mouseInputs;
-    private Game game;
+    private final Game game;
 
     public GamePanel(Game game) {
-        mouseInputs = new MouseInputs();
         this.game = game;
         setPanelSize();
-        addKeyListener(new KeyboardInputs((IGameActions) game, (IGameRead) game));
-        mouseInputs.setGamePanel(this);
-        addMouseListener(mouseInputs);
-        addMouseMotionListener(mouseInputs);
+    }
+
+    public void attachInputListeners(
+            KeyListener keyListener, MouseListener mouseListener, MouseMotionListener mouseMotionListener) {
+        if (keyListener != null) {
+            addKeyListener(keyListener);
+        }
+        if (mouseListener != null) {
+            addMouseListener(mouseListener);
+        }
+        if (mouseMotionListener != null) {
+            addMouseMotionListener(mouseMotionListener);
+        }
     }
 
     private void setPanelSize() {
@@ -42,7 +48,7 @@ public class GamePanel extends JPanel {
         game.render(g);
     }
 
-    public Game getGame() {
-        return game;
+    public void onWindowFocusLost() {
+        game.windowFocusLost();
     }
 }

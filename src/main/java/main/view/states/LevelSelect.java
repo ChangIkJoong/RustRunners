@@ -9,8 +9,9 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
 import main.model.levels.LevelManager;
-import main.controller.Game;
+import main.view.states.Actions.LevelSelectActions;
 import utilities.LoadSave;
+import utilities.GameConfig;
 
 public class LevelSelect {
     // Grid layout
@@ -21,8 +22,8 @@ public class LevelSelect {
     private static final int PREVIEW_SPACING = 30;
 
     //variables
-    private Game game;
-    private LevelManager levelManager;
+    private final LevelSelectActions actions;
+    private final LevelManager levelManager;
     private ArrayList<Rectangle> levelBounds = new ArrayList<>();
     private ArrayList<BufferedImage> levelPreviews = new ArrayList<>();
     private BufferedImage lockImage;
@@ -41,8 +42,8 @@ public class LevelSelect {
         NORMAL, HOVER, CLICK
     }
 
-    public LevelSelect(Game game, LevelManager levelManager) {
-        this.game = game;
+    public LevelSelect(LevelSelectActions actions, LevelManager levelManager) {
+        this.actions = actions;
         this.levelManager = levelManager;
         loadLevelPreviews();
         loadButtonImages();
@@ -91,7 +92,7 @@ public class LevelSelect {
     
     private void calculateLevelBounds() {
         int totalLevels = levelManager.getLevelCount();
-        int startX = (Game.GAME_WIDTH - (COLUMNS * PREVIEW_WIDTH + (COLUMNS - 1) * PREVIEW_SPACING)) / 2;
+        int startX = (GameConfig.GAME_WIDTH - (COLUMNS * PREVIEW_WIDTH + (COLUMNS - 1) * PREVIEW_SPACING)) / 2;
         
         for (int i = 0; i < totalLevels; i++) {
             int row = i / COLUMNS;
@@ -109,14 +110,14 @@ public class LevelSelect {
     public void draw(Graphics g) {
         // Background
         g.setColor(Color.BLACK);
-        g.fillRect(0, 0, Game.GAME_WIDTH, Game.GAME_HEIGHT);
+        g.fillRect(0, 0, GameConfig.GAME_WIDTH, GameConfig.GAME_HEIGHT);
         
         // Title
         g.setFont(titleFont);
         g.setColor(Color.WHITE);
         String title = "Select Level";
         FontMetrics fontMetrics = g.getFontMetrics();
-        int titleX = (Game.GAME_WIDTH - fontMetrics.stringWidth(title)) / 2;
+        int titleX = (GameConfig.GAME_WIDTH - fontMetrics.stringWidth(title)) / 2;
         g.drawString(title, titleX, 60);
         
         // Draw level previews in grid
@@ -226,7 +227,7 @@ public class LevelSelect {
     public void mouseReleased(int x, int y) {
         // Check back button release
         if (backButtonBounds.contains(x, y) && backButtonState == ButtonState.CLICK) {
-            game.setGameState(Game.GameState.MENU);
+            actions.onBackToMenu();
             backButtonState = ButtonState.NORMAL;
             return;
         }
@@ -242,8 +243,6 @@ public class LevelSelect {
         }
         
         // Set the current level index and start playing
-        levelManager.setCurrentLevelIndex(levelIndex);
-        game.setGameState(Game.GameState.PLAYING);
+        actions.onSelectLevel(levelIndex);
     }
 }
-

@@ -4,15 +4,14 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 
-import main.view.GamePanel;
-import main.controller.Game;
+import main.controller.facades.IGameActions;
 
 public class MouseInputs implements MouseListener, MouseMotionListener {
 
-    private GamePanel panel;
+    private final IGameActions actions;
 
-    public void setGamePanel(GamePanel panel) {
-        this.panel = panel;
+    public MouseInputs(IGameActions actions) {
+        this.actions = actions;
     }
 
     @Override
@@ -21,15 +20,7 @@ public class MouseInputs implements MouseListener, MouseMotionListener {
 
     @Override
     public void mouseMoved(MouseEvent e) {
-        if (panel == null) {
-            return;
-        }
-        Game game = panel.getGame();
-        if (game.getGameState() == Game.GameState.MENU) {
-            game.mainMenu.mouseMoved(e.getX(), e.getY());
-        } else if (game.getGameState() == Game.GameState.LEVEL_SELECT) {
-            game.levelSelect.mouseMoved(e.getX(), e.getY());
-        }
+        actions.mouseMoved(e.getX(), e.getY());
     }
 
     @Override
@@ -46,28 +37,12 @@ public class MouseInputs implements MouseListener, MouseMotionListener {
 
     @Override
     public void mousePressed(MouseEvent e) {
-        if (panel == null) {
-            return;
-        }
-        Game game = panel.getGame();
-        if (game.getGameState() == Game.GameState.MENU) {
-            game.mainMenu.mousePressed(e.getX(), e.getY());
-        }else if (game.getGameState() == Game.GameState.LEVEL_SELECT) {
-            game.levelSelect.mousePressed(e.getX(), e.getY());
-        }
+        actions.mousePressed(e.getX(), e.getY());
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        if (panel == null) {
-            return;
-        }
-        Game game = panel.getGame();
-        if (game.getGameState() == Game.GameState.MENU) {
-            game.mainMenu.mouseReleased(e.getX(), e.getY());
-        } else if (game.getGameState() == Game.GameState.LEVEL_SELECT) {
-            game.levelSelect.mouseReleased(e.getX(), e.getY());
-        }
+        actions.mouseReleased(e.getX(), e.getY());
     }
 
 }

@@ -16,8 +16,6 @@ import java.util.Locale;
 
 import javax.imageio.ImageIO;
 
-import main.controller.Game;
-
 public class LoadSave {
 
     public static final String PLAYER_ATLAS = "Character.png";
@@ -117,7 +115,7 @@ public class LoadSave {
     }
 
     public static int[][] getLevelData(String levelFileName) {
-        int[][] lvlData = new int[Game.TILES_IN_HEIGHT][Game.TILES_IN_WIDTH];
+        int[][] lvlData = new int[GameConfig.TILES_IN_HEIGHT][GameConfig.TILES_IN_WIDTH];
         BufferedImage img = getSpriteAtlas(levelFileName);
         if (img == null) {
             return lvlData;
@@ -136,7 +134,7 @@ public class LoadSave {
     }
 
     public static int[][] getLevelObstacleData(String levelFileName) {
-        int[][] lvlData = new int[Game.TILES_IN_HEIGHT][Game.TILES_IN_WIDTH];
+        int[][] lvlData = new int[GameConfig.TILES_IN_HEIGHT][GameConfig.TILES_IN_WIDTH];
         BufferedImage img = getSpriteAtlas(levelFileName);
         if (img == null) {
             return lvlData;
@@ -155,7 +153,7 @@ public class LoadSave {
     }
 
     public static int[][] getLevelObjData(String levelFileName) {
-        int[][] lvlData = new int[Game.TILES_IN_HEIGHT][Game.TILES_IN_WIDTH];
+        int[][] lvlData = new int[GameConfig.TILES_IN_HEIGHT][GameConfig.TILES_IN_WIDTH];
         BufferedImage img = getSpriteAtlas(levelFileName);
         if (img == null) {
             return lvlData;

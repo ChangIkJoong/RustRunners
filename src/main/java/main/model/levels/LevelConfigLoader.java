@@ -1,6 +1,5 @@
 package main.model.levels;
 
-import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -52,9 +51,9 @@ public class LevelConfigLoader {
         public float speed;
         public float triggerDistance;
         public boolean shouldReturn;
-        public int id = -1; // Default to -1
-        public int collisionWidth = -1; // Default -1 means use default size
-        public int collisionHeight = -1; // Default -1 means use default size
+        public int id = -1;
+        public int collisionWidth = -1;
+        public int collisionHeight = -1;
     }
 
     public static LevelConfig loadConfig(String configFileName) {
@@ -73,7 +72,7 @@ public class LevelConfigLoader {
             while ((line = reader.readLine()) != null) {
                 line = line.trim();
                 if (line.isEmpty() || line.startsWith("#")) {
-                    continue; // Skip empty lines and comments
+                    continue;
                 }
 
                 if (line.startsWith("spawnX=")) {
@@ -99,7 +98,6 @@ public class LevelConfigLoader {
                     gtp.speed = Float.parseFloat(parts[3].trim());
                     gtp.shouldReturn = Boolean.parseBoolean(parts[4].trim());
                     gtp.solid = Boolean.parseBoolean(parts[5].trim());
-                    // Add default values for new fields if not present (backward compatibility)
                     if (parts.length > 6) {
                         gtp.shouldLoop = Boolean.parseBoolean(parts[6].trim());
                     }
@@ -140,32 +138,26 @@ public class LevelConfigLoader {
         return config;
     }
 
-    public static void applyConfig(Level level, LevelConfig config, BufferedImage[] levelSprite,
-                                   BufferedImage[] objectSprite, BufferedImage spawnTube) {
-        // Apply spawn platforms (use the last one if multiple)
+    public static void applyConfig(Level level, LevelConfig config) {
         if (!config.spawnPlatforms.isEmpty()) {
             SpawnPlatformConfig sp = config.spawnPlatforms.get(config.spawnPlatforms.size() - 1);
             level.setSpawnPlatform(new SpawnPlatform(sp.x, sp.y, (int) sp.width, (int) sp.height,
-                    (int) sp.speed, sp.waitTime, spawnTube));
+                    (int) sp.speed, sp.waitTime));
         }
 
-        // Apply grouped trigger platforms
         for (GroupedTriggerPlatformConfig gtp : config.groupedTriggerPlatforms) {
             level.createGroupedTriggerPlatformFromTile(gtp.tileId, gtp.targetOffsetX, gtp.targetOffsetY,
-                    gtp.speed, levelSprite, gtp.shouldReturn, gtp.solid, gtp.shouldLoop);
+                    gtp.speed, gtp.shouldReturn, gtp.solid, gtp.shouldLoop);
         }
 
-        // Apply spikes
         for (SpikeConfig sc : config.spikes) {
-            level.createSpikesFromTile(sc.tileId, sc.spriteId, objectSprite);
+            level.createSpikesFromTile(sc.tileId, sc.spriteId);
         }
 
-        // Apply trigger spikes
         for (TriggerSpikeConfig tsc : config.triggerSpikes) {
             level.createTriggerSpikesFromTile(tsc.tileId, tsc.spriteId, tsc.targetOffsetX, tsc.targetOffsetY,
-                    tsc.speed, tsc.triggerDistance, objectSprite, tsc.shouldReturn, tsc.id,
+                    tsc.speed, tsc.triggerDistance, tsc.shouldReturn, tsc.id,
                     tsc.collisionWidth, tsc.collisionHeight);
         }
     }
 }
-

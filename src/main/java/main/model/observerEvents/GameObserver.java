@@ -10,4 +10,5 @@ public interface GameObserver {
     void onLevelCompleted();
     void onLevelLoadRequested();
     void onTransitionComplete();
+    void onRunCompleted();
 }

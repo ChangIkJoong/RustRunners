@@ -79,6 +79,12 @@ public class GameModel {
         }
     }
 
+    private void notifyRunCompleted() {
+        for (GameObserver obs : observers) {
+            obs.onRunCompleted();
+        }
+    }
+
     //Update Loop---------------------------
     public void update() {
         if (inTransition) {
@@ -97,7 +103,7 @@ public class GameModel {
         }
 
         player.update();
-        levelManager.update();
+        levelManager.update(player);
 
         boolean isPlayerDead = player.isDead();
 
@@ -126,11 +132,18 @@ public class GameModel {
                     // Logic for swapping levels
                     levelManager.setLevelScore(player.getDeathCount());
                     player.resetDeathCount();
-                    levelManager.loadNextLevel();
+                    boolean advanced = levelManager.loadNextLevel();
                     player.resetLevelEnd();
-
                     isLevelLoaded = true;
-                    notifyLevelLoadRequested();
+
+                    if (advanced) {
+                        reloadPlayerForCurrentLevel();
+                        notifyLevelLoadRequested();
+                    } else {
+                        resetTransition();
+                        notifyRunCompleted();
+                        return;
+                    }
                 }
                 scalingUp = false;
             }
