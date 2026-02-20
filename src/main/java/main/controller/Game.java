@@ -97,9 +97,8 @@ public class Game implements Runnable, IGameActions, IGameRead,
         levelManager = new LevelManager();
 
         player = new Player(200, 550, (int) (32 * SCALE), (int) (32 * SCALE));
-        loadPlayerForCurrentLevel();
-
         model = new GameModel(player, levelManager);
+        model.reloadPlayerForCurrentLevel();
 
         view = new GameView(model, GAME_WIDTH, GAME_HEIGHT);
         transitionImage = LoadSave.getSpriteAtlas(LoadSave.TRANSITION_IMG);
@@ -126,16 +125,6 @@ public class Game implements Runnable, IGameActions, IGameRead,
         currentState = menuState;
         wasPlayerDead = player.isDead();
         wasInTransition = model.isInTransition();
-    }
-
-    private void loadPlayerForCurrentLevel() {
-        main.model.levels.Level currentLevel = levelManager.getCurrentLvl();
-        player.setSpawnPoint(currentLevel.getSpawnX(), currentLevel.getSpawnY());
-        player.loadLvlData(currentLevel.getLevelData());
-        player.setCurrentLevel(currentLevel);
-        player.spawnAtLevelStart();
-        currentLevel.resetPlatforms();
-        currentLevel.clearDeathPositions();
     }
 
     private void update() {

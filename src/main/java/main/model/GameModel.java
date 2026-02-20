@@ -152,7 +152,7 @@ public class GameModel {
         startNewTimer();
     }
 
-    private void reloadPlayerForCurrentLevel() {
+    public void reloadPlayerForCurrentLevel() {
         main.model.levels.Level currentLevel = levelManager.getCurrentLvl();
         player.setSpawnPoint(currentLevel.getSpawnX(), currentLevel.getSpawnY());
         player.loadLvlData(currentLevel.getLevelData());
