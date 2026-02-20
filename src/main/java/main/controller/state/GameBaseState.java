@@ -22,4 +22,52 @@ public abstract class GameBaseState {
 
     public void onExit() {
     }
+
+    public void onMoveLeftPressed() {
+    }
+
+    public void onMoveLeftReleased() {
+    }
+
+    public void onMoveRightPressed() {
+    }
+
+    public void onMoveRightReleased() {
+    }
+
+    public void onJumpPressed() {
+    }
+
+    public void onJumpReleased() {
+    }
+
+    public void onTogglePause() {
+    }
+
+    public void onGoToMenu() {
+    }
+
+    public void onPlayJumpSound() {
+    }
+
+    public void onLeaderboardNextLevel() {
+    }
+
+    public void onLeaderboardPreviousLevel() {
+    }
+
+    public void onMenuNameTyped(char c) {
+    }
+
+    public void onMenuNameControlKey(int keyCode) {
+    }
+
+    public void onMouseMoved(int x, int y) {
+    }
+
+    public void onMousePressed(int x, int y) {
+    }
+
+    public void onMouseReleased(int x, int y) {
+    }
 }

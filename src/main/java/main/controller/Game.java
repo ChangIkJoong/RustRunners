@@ -21,17 +21,11 @@ import main.controller.state.GamingState;
 import main.controller.state.LeaderboardState;
 import main.controller.state.LevelSelectState;
 import main.controller.state.MenuState;
-import main.view.states.Actions.LeaderboardActions;
-import main.view.states.Actions.LevelSelectActions;
-import main.view.states.Actions.MainMenuActions;
 import main.view.states.Leaderboard;
-import main.view.states.LevelSelect;
-import main.view.states.MainMenu;
 import utilities.GameConfig;
 import utilities.LoadSave;
 
-public class Game implements Runnable, IGameActions,
-        MainMenuActions, LevelSelectActions, LeaderboardActions {
+public class Game implements Runnable, IGameActions {
 
     //public static final int TILES_DEAFULT_SIZE = GameConfig.TILES_DEFAULT_SIZE;
     public static final float SCALE = GameConfig.SCALE;
@@ -40,10 +34,6 @@ public class Game implements Runnable, IGameActions,
     //public static final int TILES_SIZE = GameConfig.TILES_SIZE;
     public static final int GAME_WIDTH = GameConfig.GAME_WIDTH;
     public static final int GAME_HEIGHT = GameConfig.GAME_HEIGHT;
-
-    private MainMenu mainMenu;
-    private Leaderboard leaderboard;
-    private LevelSelect levelSelect;
 
     private GamePanel gamePanel;
     private GameWindow gameWindow;
@@ -102,9 +92,10 @@ public class Game implements Runnable, IGameActions,
         view = new GameView(model, GAME_WIDTH, GAME_HEIGHT);
         transitionImage = LoadSave.getSpriteAtlas(LoadSave.TRANSITION_IMG);
 
-        mainMenu = new MainMenu(this, model::getPlayerName);
-        levelSelect = new LevelSelect(this, levelManager);
-        leaderboard = new Leaderboard(this, new Leaderboard.LeaderboardDataSource() {
+        gamingState = new GamingState(this);
+        menuState = new MenuState(this, model::getPlayerName);
+        levelSelectState = new LevelSelectState(this, levelManager);
+        leaderboardState = new LeaderboardState(this, new Leaderboard.LeaderboardDataSource() {
             @Override
             public List<ScoreEntry> loadEntriesForLevel(int levelIndex) {
                 return leaderboardService.loadEntriesForLevel(levelIndex);
@@ -115,11 +106,6 @@ public class Game implements Runnable, IGameActions,
                 return levelManager.getLevelCount();
             }
         });
-
-        gamingState = new GamingState(this);
-        menuState = new MenuState(this);
-        leaderboardState = new LeaderboardState(this);
-        levelSelectState = new LevelSelectState(this);
 
         currentState = menuState;
         wasPlayerDead = player.isDead();
@@ -238,22 +224,6 @@ public class Game implements Runnable, IGameActions,
         return gameState;
     }
 
-    public AudioController getAudioController() {
-        return audioController;
-    }
-
-    public MainMenu getMainMenuView() {
-        return mainMenu;
-    }
-
-    public Leaderboard getLeaderboardView() {
-        return leaderboard;
-    }
-
-    public LevelSelect getLevelSelectView() {
-        return levelSelect;
-    }
-
     public void setPlayerName(String playerName) {
         model.setPlayerName(playerName);
     }
@@ -294,7 +264,7 @@ public class Game implements Runnable, IGameActions,
         }
     }
 
-    public void togglePause() {
+    public void togglePauseInternal() {
         model.togglePause();
     }
 
@@ -304,158 +274,81 @@ public class Game implements Runnable, IGameActions,
 
     @Override
     public void moveLeftPressed() {
-        if (gameState == GameState.PLAYING) {
-            player.setLeft(true);
-        }
+        currentState.onMoveLeftPressed();
     }
 
     @Override
     public void moveLeftReleased() {
-        if (gameState == GameState.PLAYING) {
-            player.setLeft(false);
-        }
+        currentState.onMoveLeftReleased();
     }
 
     @Override
     public void moveRightPressed() {
-        if (gameState == GameState.PLAYING) {
-            player.setRight(true);
-        }
+        currentState.onMoveRightPressed();
     }
 
     @Override
     public void moveRightReleased() {
-        if (gameState == GameState.PLAYING) {
-            player.setRight(false);
-        }
+        currentState.onMoveRightReleased();
     }
 
     @Override
     public void jumpPressed() {
-        if (gameState == GameState.PLAYING) {
-            player.setJump(true);
-        }
+        currentState.onJumpPressed();
     }
 
     @Override
     public void jumpReleased() {
-        if (gameState == GameState.PLAYING) {
-            player.setJump(false);
-        }
+        currentState.onJumpReleased();
     }
 
     @Override
     public void goToMenu() {
-        if (gameState != GameState.MENU) {
-            setGameState(GameState.MENU);
-        }
+        currentState.onGoToMenu();
+    }
+
+    @Override
+    public void togglePause() {
+        currentState.onTogglePause();
     }
 
     @Override
     public void playJumpSound() {
-        if (gameState == GameState.PLAYING) {
-            audioController.playJump();
-        }
+        currentState.onPlayJumpSound();
     }
 
     @Override
     public void leaderboardNextLevel() {
-        if (gameState == GameState.LEADERBOARD && leaderboard != null) {
-            leaderboard.nextLevel();
-        }
+        currentState.onLeaderboardNextLevel();
     }
 
     @Override
     public void leaderboardPreviousLevel() {
-        if (gameState == GameState.LEADERBOARD && leaderboard != null) {
-            leaderboard.previousLevel();
-        }
+        currentState.onLeaderboardPreviousLevel();
     }
 
     @Override
     public void menuNameTyped(char c) {
-        if (gameState == GameState.MENU && mainMenu != null && mainMenu.isEditingName()) {
-            mainMenu.handleNameKeyPressed(0, c);
-        }
+        currentState.onMenuNameTyped(c);
     }
 
     @Override
     public void menuNameControlKey(int keyCode) {
-        if (gameState == GameState.MENU && mainMenu != null && mainMenu.isEditingName()) {
-            mainMenu.handleNameKeyPressed(keyCode, '\0');
-        }
+        currentState.onMenuNameControlKey(keyCode);
     }
 
     @Override
     public void mouseMoved(int x, int y) {
-        if (gameState == GameState.MENU && mainMenu != null) {
-            mainMenu.mouseMoved(x, y);
-        } else if (gameState == GameState.LEVEL_SELECT && levelSelect != null) {
-            levelSelect.mouseMoved(x, y);
-        }
+        currentState.onMouseMoved(x, y);
     }
 
     @Override
     public void mousePressed(int x, int y) {
-        if (gameState == GameState.MENU && mainMenu != null) {
-            mainMenu.mousePressed(x, y);
-        } else if (gameState == GameState.LEVEL_SELECT && levelSelect != null) {
-            levelSelect.mousePressed(x, y);
-        }
+        currentState.onMousePressed(x, y);
     }
 
     @Override
     public void mouseReleased(int x, int y) {
-        if (gameState == GameState.MENU && mainMenu != null) {
-            mainMenu.mouseReleased(x, y);
-        } else if (gameState == GameState.LEVEL_SELECT && levelSelect != null) {
-            levelSelect.mouseReleased(x, y);
-        }
-    }
-
-    @Override
-    public void onPlay() {
-        setGameState(GameState.PLAYING);
-    }
-
-    @Override
-    public void onOpenLevelSelect() {
-        setGameState(GameState.LEVEL_SELECT);
-    }
-
-    @Override
-    public void onOpenLeaderboard() {
-        setGameState(GameState.LEADERBOARD);
-    }
-
-    @Override
-    public void onQuit() {
-        System.exit(0);
-    }
-
-    @Override
-    public void onSetPlayerName(String name) {
-        setPlayerName(name);
-    }
-
-    @Override
-    public void onBackToMenu() {
-        setGameState(GameState.MENU);
-    }
-
-    @Override
-    public void onSelectLevel(int levelIndex) {
-        levelManager.setCurrentLevelIndex(levelIndex);
-        setGameState(GameState.PLAYING);
-    }
-
-    @Override
-    public void onNextLevel() {
-        leaderboardNextLevel();
-    }
-
-    @Override
-    public void onPreviousLevel() {
-        leaderboardPreviousLevel();
+        currentState.onMouseReleased(x, y);
     }
 }

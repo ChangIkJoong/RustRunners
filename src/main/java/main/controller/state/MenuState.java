@@ -1,28 +1,89 @@
 package main.controller.state;
 
 import java.awt.Graphics;
+import java.util.function.Supplier;
 
 import audio.controller.AudioController;
 import main.controller.Game;
+import main.view.states.Actions.MainMenuActions;
+import main.view.states.MainMenu;
 
-public class MenuState extends GameBaseState {
+public class MenuState extends GameBaseState implements MainMenuActions {
 
-    public MenuState(Game game) {
+    private final MainMenu menuView;
+
+    public MenuState(Game game, Supplier<String> playerNameSupplier) {
         super(game);
+        this.menuView = new MainMenu(this, playerNameSupplier);
     }
 
     @Override
     public void update() {
-        game.getMainMenuView().update();
+        menuView.update();
     }
 
     @Override
     public void render(Graphics g) {
-        game.getMainMenuView().draw(g);
+        menuView.draw(g);
     }
 
     @Override
     public void onEnter() {
         AudioController.getInstance().playMenuMusic();
+    }
+
+    @Override
+    public void onGoToMenu() {
+        // Already in menu; no state transition needed.
+    }
+
+    @Override
+    public void onMouseMoved(int x, int y) {
+        menuView.mouseMoved(x, y);
+    }
+
+    @Override
+    public void onMousePressed(int x, int y) {
+        menuView.mousePressed(x, y);
+    }
+
+    @Override
+    public void onMouseReleased(int x, int y) {
+        menuView.mouseReleased(x, y);
+    }
+
+    @Override
+    public void onMenuNameTyped(char c) {
+        menuView.handleNameKeyPressed(0, c);
+    }
+
+    @Override
+    public void onMenuNameControlKey(int keyCode) {
+        menuView.handleNameKeyPressed(keyCode, '\0');
+    }
+
+    @Override
+    public void onPlay() {
+        game.setGameState(Game.GameState.PLAYING);
+    }
+
+    @Override
+    public void onOpenLevelSelect() {
+        game.setGameState(Game.GameState.LEVEL_SELECT);
+    }
+
+    @Override
+    public void onOpenLeaderboard() {
+        game.setGameState(Game.GameState.LEADERBOARD);
+    }
+
+    @Override
+    public void onQuit() {
+        System.exit(0);
+    }
+
+    @Override
+    public void onSetPlayerName(String name) {
+        game.setPlayerName(name);
     }
 }
