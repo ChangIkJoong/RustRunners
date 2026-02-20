@@ -28,6 +28,7 @@ public class GameModel {
 
     private boolean isPaused = false;
     private boolean runCompleted = false;
+    private boolean platformTriggered = false;
 
     public GameModel(Player player, LevelManager levelManager) {
         this.player = player;
@@ -52,7 +53,9 @@ public class GameModel {
         }
 
         player.update();
-        levelManager.update(player);
+        if (levelManager.update(player)) {
+            platformTriggered = true;
+        }
 
         boolean isPlayerDead = player.isDead();
 
@@ -202,9 +205,15 @@ public class GameModel {
         return startTime;
     }
 
-    public boolean consumeRunCompleted() {
+    public boolean doRunCompleted() {
         boolean value = runCompleted;
         runCompleted = false;
+        return value;
+    }
+
+    public boolean doPlatformTriggered() {
+        boolean value = platformTriggered;
+        platformTriggered = false;
         return value;
     }
 }

@@ -2,7 +2,6 @@ package main.model.entities.entity;
 
 import java.util.List;
 
-import audio.controller.AudioController;
 import main.model.entities.states.TriggerPlatformModel;
 
 public class TriggerPlatform extends Entity {
@@ -11,8 +10,6 @@ public class TriggerPlatform extends Entity {
 
     // Sprite hitbox object to avoid creating garbage.
     private final java.awt.geom.Rectangle2D.Float cachedSpriteHitbox = new java.awt.geom.Rectangle2D.Float();
-
-    private AudioController audioController;
 
     public TriggerPlatform(float x, float y, float targetX, float targetY,
                            int width, int height, float speed, int firstTileSpriteId,
@@ -153,13 +150,12 @@ public class TriggerPlatform extends Entity {
         return hitbox.intersects(player.getHitbox());
     }
 
-    public void trigger() {
+    public boolean trigger() {
         if (!model.isTriggered()) {
             model.setTriggered(true);
-            if (audioController != null) {
-                audioController.playPlatformSound();
-            }
+            return true;
         }
+        return false;
     }
 
     public boolean isTriggered() {
@@ -197,10 +193,6 @@ public class TriggerPlatform extends Entity {
 
     public boolean isSolid() {
         return model.isSolid();
-    }
-
-    public void setAudioController(AudioController audioController) {
-        this.audioController = audioController;
     }
 
     public java.awt.geom.Rectangle2D.Float getSpriteHitbox() {

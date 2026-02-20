@@ -242,7 +242,7 @@ public class LevelSelect {
             return; // Level is locked, do nothing
         }
         
-        // Set the current level index and start playing
+        // ställer in på nuvarande lvl index och spelar
         actions.onSelectLevel(levelIndex);
     }
 }

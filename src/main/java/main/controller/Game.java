@@ -95,7 +95,6 @@ public class Game implements Runnable, IGameActions, IGameRead,
 
     private void initClasses() {
         levelManager = new LevelManager();
-        levelManager.setAudioController(audioController);
 
         player = new Player(200, 550, (int) (32 * SCALE), (int) (32 * SCALE));
         loadPlayerForCurrentLevel();
@@ -146,6 +145,10 @@ public class Game implements Runnable, IGameActions, IGameRead,
     }
 
     private void handleModelSideEffects() {
+        if (model.doPlatformTriggered()) {
+            audioController.playPlatformSound();
+        }
+
         boolean isPlayerDead = player.isDead();
         if (!wasPlayerDead && isPlayerDead) {
             audioController.playDead();
@@ -163,7 +166,7 @@ public class Game implements Runnable, IGameActions, IGameRead,
         }
         wasInTransition = inTransition;
 
-        if (model.consumeRunCompleted()) {
+        if (model.doRunCompleted()) {
             setGameState(GameState.MENU);
             wasPlayerDead = player.isDead();
             wasInTransition = model.isInTransition();

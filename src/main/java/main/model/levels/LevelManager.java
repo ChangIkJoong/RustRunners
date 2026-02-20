@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import audio.controller.AudioController;
 import main.model.entities.entity.Player;
 import utilities.LoadSave;
 
@@ -14,7 +13,6 @@ public class LevelManager {
     private List<Level> levels;
     private int currentLevelIndex = 0;
     private final Set<Integer> completedLevels = new HashSet<>();
-    private AudioController audioController;
 
     public LevelManager() {
         buildAllLevels();
@@ -27,13 +25,6 @@ public class LevelManager {
         completedLevels.add(4);
         completedLevels.add(5);
         completedLevels.add(6);
-    }
-
-    public void setAudioController(AudioController audioController) {
-        this.audioController = audioController;
-        for (Level level : levels) {
-            level.setAudioControllerForPlatforms(audioController);
-        }
     }
 
     private void buildAllLevels() {
@@ -65,14 +56,14 @@ public class LevelManager {
                 config.spawnY
         );
         LevelConfigLoader.applyConfig(level, config);
-        level.setAudioControllerForPlatforms(audioController);
         levels.add(level);
     }
 
-    public void update(Player player) {
-        getCurrentLvl().updatePlatforms(player);
+    public boolean update(Player player) {
+        boolean platformTriggered = getCurrentLvl().updatePlatforms(player);
         getCurrentLvl().updateTriggerSpikes(player);
         getCurrentLvl().updateSpawnPlatform();
+        return platformTriggered;
     }
 
     public Level getCurrentLvl() {

@@ -192,27 +192,26 @@ public class Level {
         return -1;
     }
 
+    //redundant?
     public void addMovingPlatform(MovingPlatform platform) {
         movingPlatforms.add(platform);
     }
-
+    //redundant?
     public void addTriggerPlatform(TriggerPlatform platform) {
         triggerPlatforms.add(platform);
     }
 
-    public void setAudioControllerForPlatforms(audio.controller.AudioController audioController) {
-        for (TriggerPlatform platform : triggerPlatforms) {
-            platform.setAudioController(audioController);
-        }
-    }
+    public boolean updatePlatforms(Entity player) {
+        boolean platformTriggered = false;
 
-    public void updatePlatforms(Entity player) {
         for (MovingPlatform platform : movingPlatforms) {
             platform.update();
         }
         for (TriggerPlatform platform : triggerPlatforms) {
             if (!platform.isTriggered() && platform.checkPlayerCollision(player)) {
-                platform.trigger();
+                if (platform.trigger()) {
+                    platformTriggered = true;
+                }
             }
 
             float oldX = platform.getHitbox().x;
@@ -250,6 +249,8 @@ public class Level {
                 }
             }
         }
+
+        return platformTriggered;
     }
 
     public List<MovingPlatform> getMovingPlatforms() {
