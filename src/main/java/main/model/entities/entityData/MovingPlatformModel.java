@@ -1,4 +1,4 @@
-package main.model.entities.states;
+package main.model.entities.entityData;
 import java.awt.geom.Rectangle2D;
 
 public class MovingPlatformModel {

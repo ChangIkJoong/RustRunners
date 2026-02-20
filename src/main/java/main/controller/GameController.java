@@ -12,7 +12,7 @@ import main.controller.state.LeaderboardState;
 import main.controller.state.LevelSelectState;
 import main.controller.state.MenuState;
 import main.model.GameModel;
-import main.model.entities.entity.Player;
+import main.model.entities.entityLogic.Player;
 import main.model.leaderboard.LeaderboardService;
 import main.model.leaderboard.ScoreEntry;
 import main.model.levels.LevelManager;

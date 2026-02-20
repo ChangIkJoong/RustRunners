@@ -20,7 +20,7 @@ import main.controller.inputs.commands.MoveLeftPressCommand;
 import main.controller.inputs.commands.MoveLeftReleaseCommand;
 import main.controller.inputs.commands.MoveRightPressCommand;
 import main.controller.inputs.commands.MoveRightReleaseCommand;
-import main.controller.inputs.commands.NoOpCommand;
+import main.controller.inputs.commands.EmptyCommand;
 import main.controller.inputs.commands.PlayJumpSoundCommand;
 import main.controller.inputs.commands.TogglePauseCommand;
 
@@ -55,7 +55,7 @@ public class KeyboardInputs implements KeyListener {
         Command menuNameEnter = new MenuNameControlKeyCommand(actions, KeyEvent.VK_ENTER);
         Command menuNameEscape = new MenuNameControlKeyCommand(actions, KeyEvent.VK_ESCAPE);
         Command menuNameBackspace = new MenuNameControlKeyCommand(actions, KeyEvent.VK_BACK_SPACE);
-        Command noOp = new NoOpCommand();
+        Command noOp = new EmptyCommand();
 
         bindPressed(KeyEvent.VK_A, moveLeftPress);
         bindPressed(KeyEvent.VK_LEFT, moveLeftPress);

@@ -1,7 +1,7 @@
-package main.model.entities.entity;
+package main.model.entities.entityLogic;
 
 import utilities.GameConfig;
-import main.model.entities.states.PlayerModel;
+import main.model.entities.entityData.PlayerModel;
 
 import static utilities.Constants.PlayerConstants.IDLE_LEFT;
 import static utilities.Constants.PlayerConstants.IDLE_RIGHT;
@@ -18,6 +18,12 @@ import static utilities.HelpMethods.isEntityOnFloor;
 import static utilities.HelpMethods.isOnLevelEnd;
 
 public class Player extends Entity {
+    /*
+     behavior & logic class
+        - runs game logic in update(), updatePos(), die(), respawn()
+        - checks collisions/level interactions
+        - sets animation state transitions
+     */
 
     private static final long RESPAWN_DELAY_MS = 500;
 

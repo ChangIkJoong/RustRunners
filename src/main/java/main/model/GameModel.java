@@ -1,6 +1,6 @@
 package main.model;
 
-import main.model.entities.entity.Player;
+import main.model.entities.entityLogic.Player;
 import main.model.levels.LevelManager;
 
 public class GameModel {

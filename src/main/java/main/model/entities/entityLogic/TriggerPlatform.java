@@ -1,8 +1,8 @@
-package main.model.entities.entity;
+package main.model.entities.entityLogic;
 
 import java.util.List;
 
-import main.model.entities.states.TriggerPlatformModel;
+import main.model.entities.entityData.TriggerPlatformModel;
 
 public class TriggerPlatform extends Entity {
 

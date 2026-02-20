@@ -4,7 +4,7 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 
-import main.model.entities.entity.Player;
+import main.model.entities.entityLogic.Player;
 import utilities.GameConfig;
 import utilities.LoadSave;
 

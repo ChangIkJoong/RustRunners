@@ -1,8 +1,10 @@
-package main.model.entities.states;
+package main.model.entities.entityData;
 
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.List;
 
-public class TriggerSpikeModel {
+public class TriggerPlatformModel {
 
     private Rectangle2D.Float hitbox;
 
@@ -12,40 +14,35 @@ public class TriggerSpikeModel {
     private float targetY;
     private float speed;
 
-    private int spriteId;
-
     private boolean triggered;
     private boolean reachedTarget;
-
-    private float triggerDistance;
-    private boolean shouldReturn;
-
     private boolean movingToTarget = true;
 
     private boolean waitingAtTarget;
     private long waitStartTime;
-    private long waitDurationMs = 500;
+    private long waitDurationMs = 1000;
 
-    private int id = -1;
+    private boolean solid;
+    private boolean loop;
+    private boolean shouldReturn;
 
-    public TriggerSpikeModel(Rectangle2D.Float hitbox,
-                             float startX, float startY,
-                             float targetX, float targetY,
-                             float speed,
-                             float triggerDistance,
-                             int spriteId,
-                             boolean shouldReturn,
-                             int id) {
+    private int firstTileSpriteId;
+    private final List<float[]> tilePositions = new ArrayList<>();
+    private final List<Integer> tileSpriteIds = new ArrayList<>();
+    private float firstTileOffsetX;
+    private float firstTileOffsetY;
+
+    public TriggerPlatformModel(Rectangle2D.Float hitbox, float startX, float startY,
+                                float targetX, float targetY, float speed,
+                                int firstTileSpriteId, boolean shouldReturn) {
         this.hitbox = hitbox;
         this.startX = startX;
         this.startY = startY;
         this.targetX = targetX;
         this.targetY = targetY;
         this.speed = speed;
-        this.triggerDistance = triggerDistance;
-        this.spriteId = spriteId;
+        this.firstTileSpriteId = firstTileSpriteId;
         this.shouldReturn = shouldReturn;
-        this.id = id;
     }
 
     public Rectangle2D.Float getHitbox() {
@@ -96,14 +93,6 @@ public class TriggerSpikeModel {
         this.speed = speed;
     }
 
-    public int getSpriteId() {
-        return spriteId;
-    }
-
-    public void setSpriteId(int spriteId) {
-        this.spriteId = spriteId;
-    }
-
     public boolean isTriggered() {
         return triggered;
     }
@@ -118,22 +107,6 @@ public class TriggerSpikeModel {
 
     public void setReachedTarget(boolean reachedTarget) {
         this.reachedTarget = reachedTarget;
-    }
-
-    public float getTriggerDistance() {
-        return triggerDistance;
-    }
-
-    public void setTriggerDistance(float triggerDistance) {
-        this.triggerDistance = triggerDistance;
-    }
-
-    public boolean isShouldReturn() {
-        return shouldReturn;
-    }
-
-    public void setShouldReturn(boolean shouldReturn) {
-        this.shouldReturn = shouldReturn;
     }
 
     public boolean isMovingToTarget() {
@@ -168,11 +141,64 @@ public class TriggerSpikeModel {
         this.waitDurationMs = waitDurationMs;
     }
 
-    public int getId() {
-        return id;
+    public boolean isSolid() {
+        return solid;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setSolid(boolean solid) {
+        this.solid = solid;
+    }
+
+    public boolean isLoop() {
+        return loop;
+    }
+
+    public void setLoop(boolean loop) {
+        this.loop = loop;
+    }
+
+    public boolean isShouldReturn() {
+        return shouldReturn;
+    }
+
+    public void setShouldReturn(boolean shouldReturn) {
+        this.shouldReturn = shouldReturn;
+    }
+
+    public int getFirstTileSpriteId() {
+        return firstTileSpriteId;
+    }
+
+    public void setFirstTileSpriteId(int firstTileSpriteId) {
+        this.firstTileSpriteId = firstTileSpriteId;
+    }
+
+    public List<float[]> getTilePositions() {
+        return tilePositions;
+    }
+
+    public List<Integer> getTileSpriteIds() {
+        return tileSpriteIds;
+    }
+
+    public float getFirstTileOffsetX() {
+        return firstTileOffsetX;
+    }
+
+    public void setFirstTileOffsetX(float firstTileOffsetX) {
+        this.firstTileOffsetX = firstTileOffsetX;
+    }
+
+    public float getFirstTileOffsetY() {
+        return firstTileOffsetY;
+    }
+
+    public void setFirstTileOffsetY(float firstTileOffsetY) {
+        this.firstTileOffsetY = firstTileOffsetY;
+    }
+
+    public void addTile(float relX, float relY, int tileSpriteId) {
+        tilePositions.add(new float[]{relX, relY});
+        tileSpriteIds.add(tileSpriteId);
     }
 }

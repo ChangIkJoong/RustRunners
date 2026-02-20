@@ -1,221 +1,276 @@
-# Refactoring Summary (Current State)
+# Refactoring Summary (Detailed, From Start Of This Chat To Current State)
 
-## Purpose
-This refactor sequence was done to address the lecturer feedback about:
-- God-object/service-locator behavior in `Game`
-- MVC boundary violations (model rendering, views driving state, controller/view coupling)
-- Pattern use that added indirection without practical value
+## 1) Refactor Objective
+The refactor work was driven by two core grading risks:
+- `Game` was acting as a god object/service locator.
+- MVC boundaries were blurred (model/view/controller responsibilities mixed).
 
-The target architecture is model-heavy MVC:
-- **Model** = gameplay state + rules
-- **View** = rendering + UI interaction surfaces
-- **Controller** = input routing, state transitions, side effects (audio/persistence)
-
----
-
-## Changes Completed (In Order) and Why
-
-## 1) State classes moved from view package to controller package
-### What changed
-- Added controller state classes:
-  - `src/main/java/main/controller/state/GameBaseState.java`
-  - `src/main/java/main/controller/state/GamingState.java`
-  - `src/main/java/main/controller/state/MenuState.java`
-  - `src/main/java/main/controller/state/LeaderboardState.java`
-  - `src/main/java/main/controller/state/LevelSelectState.java`
-- Removed old `main.view.interfaces.*State` hierarchy.
-
-### Why
-These classes are screen/state-machine controllers (transition + routing behavior), so they belong in the controller layer, not in view.
+Target architecture used during refactoring:
+- Model: gameplay state and rules.
+- View: rendering and UI widgets only.
+- Controller: input routing, screen transitions, side effects (audio, persistence).
 
 ---
 
-## 2) Rendering and image concerns were moved out of model entities/levels
-### What changed
-Model side (render concerns removed):
+## 2) Architecture Before vs After
+Before:
+- `Game` owned loop, transitions, input facade behavior, side effects, and routing details.
+- Input handlers contained state/name-edit/sound branching.
+- Views changed game flow directly.
+- Rendering concerns were mixed into model entities/level structures.
+- Observer/event lists existed without meaningful domain value.
+
+After:
+- `Game` is composition root + loop.
+- `GameController` owns state machine, action routing, side effects, render delegation.
+- `KeyboardInputs` is a pure command invoker.
+- Views emit callbacks (`*Actions`), controller states decide transitions.
+- Rendering is in view renderers, not model entities.
+- Direct calls replaced unnecessary observer indirection.
+
+---
+
+## 3) Concrete Responsibility Moves (What Moved, From Where, To Where)
+
+### 3.1 God-object split
+Moved from:
+- `src/main/java/main/controller/Game.java`
+
+Moved to:
+- `src/main/java/main/controller/GameController.java`
+
+Now in `GameController`:
+- State machine (`GameState`, `setGameState(...)`, current state selection).
+- Input action facade implementation (`IGameActions` methods).
+- Tick-side effects (`handleModelSideEffects()`).
+- Transition scoring hook (`recordLevelCompletion()`).
+- Render delegation (`render(...)`, `renderGame(...)`).
+
+`Game` now keeps:
+- Bootstrapping/wiring of controller + panel + window.
+- Game loop (`run()`), FPS/UPS timing only.
+
+### 3.2 State classes in controller layer
+Controller state files:
+- `src/main/java/main/controller/state/GameBaseState.java`
+- `src/main/java/main/controller/state/GamingState.java`
+- `src/main/java/main/controller/state/MenuState.java`
+- `src/main/java/main/controller/state/LeaderboardState.java`
+- `src/main/java/main/controller/state/LevelSelectState.java`
+
+Effect:
+- Screen behavior and transitions are controller concerns.
+- View no longer owns state-machine responsibility.
+
+### 3.3 View -> callback flow
+Action interfaces:
+- `src/main/java/main/view/states/Actions/MainMenuActions.java`
+- `src/main/java/main/view/states/Actions/LevelSelectActions.java`
+- `src/main/java/main/view/states/Actions/LeaderboardActions.java`
+
+Views now call action interfaces:
+- `MainMenu.handleSelection(...)` -> `actions.onPlay() / onOpenLevelSelect() / onOpenLeaderboard() / onQuit()`
+- `LevelSelect.handleLevelSelection(...)` -> `actions.onSelectLevel(levelIndex)`
+- `Leaderboard.backToMenu()` -> `actions.onBackToMenu()`
+
+Controller states implement those callbacks:
+- `MenuState implements MainMenuActions`
+- `LevelSelectState implements LevelSelectActions`
+- `LeaderboardState implements LeaderboardActions`
+
+### 3.4 Input refactor to command invoker
+Invoker:
+- `src/main/java/main/controller/inputs/KeyboardInputs.java`
+
+What changed:
+- `keyPressed`, `keyReleased`, `keyTyped` only dispatch/execute.
+- No game-state checks in key handlers.
+- No name-edit branching in key handlers.
+- No direct sound logic in key handlers.
+- Old `IGameRead` dependency is removed from codebase.
+
+Command files:
+- `src/main/java/main/controller/inputs/commands/Command.java`
+- `src/main/java/main/controller/inputs/commands/MoveLeftPressCommand.java`
+- `src/main/java/main/controller/inputs/commands/MoveLeftReleaseCommand.java`
+- `src/main/java/main/controller/inputs/commands/MoveRightPressCommand.java`
+- `src/main/java/main/controller/inputs/commands/MoveRightReleaseCommand.java`
+- `src/main/java/main/controller/inputs/commands/JumpPressCommand.java`
+- `src/main/java/main/controller/inputs/commands/JumpReleaseCommand.java`
+- `src/main/java/main/controller/inputs/commands/PlayJumpSoundCommand.java`
+- `src/main/java/main/controller/inputs/commands/TogglePauseCommand.java`
+- `src/main/java/main/controller/inputs/commands/GoToMenuCommand.java`
+- `src/main/java/main/controller/inputs/commands/LeaderboardNextLevelCommand.java`
+- `src/main/java/main/controller/inputs/commands/LeaderboardPreviousLevelCommand.java`
+- `src/main/java/main/controller/inputs/commands/MenuNameControlKeyCommand.java`
+- `src/main/java/main/controller/inputs/commands/MenuNameTypedCommand.java`
+- `src/main/java/main/controller/inputs/commands/NoOpCommand.java`
+
+Mouse input path:
+- `src/main/java/main/controller/inputs/MouseInputs.java` forwards raw coordinates to `IGameActions`.
+
+### 3.5 Model rendering concerns moved to view renderers
+View renderers now own drawing:
+- `src/main/java/main/view/render/LevelRenderer.java`
+- `src/main/java/main/view/render/PlayerRenderer.java`
+- Orchestrated by `src/main/java/main/view/GameView.java`
+
+Model remains data/logic:
 - `src/main/java/main/model/entities/entity/Player.java`
+- `src/main/java/main/model/levels/Level.java`
 - `src/main/java/main/model/entities/entity/Spike.java`
 - `src/main/java/main/model/entities/entity/TriggerPlatform.java`
 - `src/main/java/main/model/entities/entity/TriggerSpike.java`
 - `src/main/java/main/model/entities/entity/SpawnPlatform.java`
 - `src/main/java/main/model/entities/entity/MovingPlatform.java`
 - `src/main/java/main/model/entities/entity/DeathSprite.java`
-- `src/main/java/main/model/entities/entity/Entity.java`
-- `src/main/java/main/model/levels/Level.java`
-- `src/main/java/main/model/levels/LevelConfigLoader.java`
 
-View side (renderers own drawing/assets):
-- `src/main/java/main/view/render/PlayerRenderer.java`
-- `src/main/java/main/view/render/LevelRenderer.java`
-- `src/main/java/main/view/GameView.java`
+Result:
+- No model `Graphics`/`BufferedImage` rendering methods.
+- Model exposes sprite ids/hitboxes/state; renderers map that to images.
 
-### Why
-Model should not render itself. Moving drawing into `main.view.render` removes direct model->view coupling and makes model logic testable without graphics APIs.
-
----
-
-## 3) Views were made callback-driven (passive)
-### What changed
-Action interfaces are used by views to emit intent:
-- `src/main/java/main/view/states/Actions/MainMenuActions.java`
-- `src/main/java/main/view/states/Actions/LevelSelectActions.java`
-- `src/main/java/main/view/states/Actions/LeaderboardActions.java`
-
-Views now call actions instead of mutating game flow directly:
-- `src/main/java/main/view/states/MainMenu.java`
-- `src/main/java/main/view/states/LevelSelect.java`
-- `src/main/java/main/view/states/Leaderboard.java`
-
-Controller-state classes implement those actions:
+### 3.6 Audio moved out of model domain logic
+Audio invocation is in controller/state flow:
+- `src/main/java/main/controller/GameController.java`
+- `src/main/java/main/controller/state/GamingState.java`
 - `src/main/java/main/controller/state/MenuState.java`
-- `src/main/java/main/controller/state/LevelSelectState.java`
 - `src/main/java/main/controller/state/LeaderboardState.java`
+- `src/main/java/main/controller/state/LevelSelectState.java`
 
-### Why
-View should not decide transitions (`setGameState`) or persistence logic. It should emit UI intent; controller decides behavior.
+Model no longer decides audio playback directly.
 
----
+### 3.7 Jump key repeat fix
+Issue:
+- Key repeat could fire jump sound repeatedly while jump was held.
 
-## 4) Input handling was converted to command-driven invocations
-### What changed
-- `KeyboardInputs` is now a pure invoker:
-  - `keyPressed/keyReleased/keyTyped` dispatch command bindings only.
-  - No direct state branches in key handlers.
-  - File: `src/main/java/main/controller/inputs/KeyboardInputs.java`
-- Command classes under:
-  - `src/main/java/main/controller/inputs/commands/*.java`
-- Added/used commands for:
-  - movement press/release
-  - jump press/release
-  - pause/menu
-  - leaderboard left/right
-  - name edit control keys
-  - name typed input
-  - jump sound
+Fix:
+- `GamingState` owns `jumpSoundArmed`.
+- `onPlayJumpSound()` plays only once until `onJumpReleased()` disarms.
+- File: `src/main/java/main/controller/state/GamingState.java`
 
-### Why
-This keeps input mapping isolated from gameplay logic and avoids `KeyboardInputs` becoming another conditional-heavy controller.
+### 3.8 Observer simplification
+Removed:
+- Observer-style indirection and listener lists that were adding complexity without clear value.
 
----
+Current approach:
+- Direct controller calls for side effects.
+- Controller handles transition-completion effects and scoring.
 
-## 5) Jump sound behavior fixed for key repeat
-### What changed
-- `PlayJumpSoundCommand` is dispatched from keyboard bindings.
-- `GamingState` guards repeated jump sound with `jumpSoundArmed` and resets on jump release:
-  - `src/main/java/main/controller/state/GamingState.java`
+### 3.9 Leaderboard view no longer parses file directly
+Data model/service:
+- `src/main/java/main/model/leaderboard/ScoreEntry.java`
+- `src/main/java/main/model/leaderboard/LeaderboardService.java`
 
-### Why
-Without guard, holding jump triggers OS key repeat and repeatedly replays jump sound.
+View abstraction:
+- `Leaderboard.LeaderboardDataSource` in `src/main/java/main/view/states/Leaderboard.java`
 
----
+Controller wiring:
+- `GameController` provides data source implementation to `LeaderboardState`.
 
-## 6) Observer pattern was removed; direct controller flow is used
-### What changed
-- Deleted observer interface:
-  - `src/main/java/main/model/observerEvents/GameObserver.java` (removed)
-- Removed observer lists/notify flow from model/controller.
-- `Game` now handles model side effects directly:
-  - `handleModelSideEffects()`
-  - `recordLevelCompletion()`
-  - file: `src/main/java/main/controller/Game.java`
+### 3.10 Player/level reload flow deduplication
+Centralized helper:
+- `GameModel.reloadPlayerForCurrentLevel()`
 
-### Why
-The observer setup added indirection without meaningful decoupling in this codebase. Direct calls are clearer and simpler to maintain.
+Used by:
+- `GameModel.onEnterMenuFromPlaying()`
+- `GameModel.onEnterPlayingFromLevelSelect()`
+- `GameController` constructor initial setup
+- Transition path in `GameModel.updateTransition()`
 
----
+Effect:
+- Reduced duplicated player-level re-init logic.
 
-## 7) Audio dependency was removed from model
-### What changed
-- Model package no longer imports/uses `AudioController`.
-- Audio calls are in controller/state classes only:
-  - `src/main/java/main/controller/Game.java`
-  - `src/main/java/main/controller/state/GamingState.java`
-  - `src/main/java/main/controller/state/MenuState.java`
-  - `src/main/java/main/controller/state/LeaderboardState.java`
-  - `src/main/java/main/controller/state/LevelSelectState.java`
+### 3.11 Passive view surface/wiring cleanup
+`GamePanel`:
+- File: `src/main/java/main/view/GamePanel.java`
+- Exposes `attachInputListeners(...)` and delegates rendering to controller.
 
-### Why
-Audio playback is a side effect and belongs to controller/application flow, not model rules.
+`GameWindow`:
+- File: `src/main/java/main/view/GameWindow.java`
+- Focus lost callback routed to panel/controller (`onWindowFocusLost`), not direct game internals.
+
+### 3.12 Quality gate fix
+Build blocker fixed:
+- Removed unused import in `src/main/java/main/model/entities/states/PlayerModel.java`.
 
 ---
 
-## 8) Leaderboard file parsing moved out of view
-### What changed
-- Added model-side leaderboard service/data model:
+## 4) End-to-End Behavior Flows After Refactor
+
+### 4.1 Jump key while playing
+1. `KeyboardInputs.keyPressed(...)` dispatches bound commands for key code.
+2. `PlayJumpSoundCommand.execute()` calls `IGameActions.playJumpSound()`.
+3. `JumpPressCommand.execute()` calls `IGameActions.jumpPressed()`.
+4. `GameController` forwards to current controller state.
+5. `GamingState.onPlayJumpSound()` and `GamingState.onJumpPressed()` execute state-specific behavior.
+
+### 4.2 Main menu button click
+1. `MainMenu.mouseReleased(...)` detects selected option.
+2. `MainMenu` calls callback, for example `actions.onOpenLevelSelect()`.
+3. `MenuState` handles callback and calls `controller.setGameState(LEVEL_SELECT)`.
+4. `GameController` performs transition and `onEnter()/onExit()` state hooks.
+
+### 4.3 Leaderboard navigation from keyboard
+1. `KeyboardInputs` dispatches LEFT/RIGHT bound commands.
+2. `LeaderboardPreviousLevelCommand` or `LeaderboardNextLevelCommand` executes.
+3. `GameController` routes to current state.
+4. `LeaderboardState` updates `leaderboardView.previousLevel()/nextLevel()`.
+
+---
+
+## 5) Dispatch Logic Description (Current)
+The dispatch path in `KeyboardInputs` is now intentionally simple:
+- `keyPressed(...)` -> `executePressed(...)` -> execute list from `pressedCommands`.
+- `keyReleased(...)` -> `executeReleased(...)` -> execute list from `releasedCommands`.
+- `keyTyped(...)` -> `executeTyped(...)` -> execute specific typed command or fallback typed-char command.
+
+No screen checks or branch trees exist in the key event methods.
+
+---
+
+## 6) Verification Snapshot
+Verified during this refactor stage:
+- `mvn -DskipTests compile` passed with checkstyle clean (0 violations at that run).
+- No remaining references found for removed observer/read-facade remnants:
+  - `GameObserver`
+  - `gameEventListeners`
+  - `IGameRead`
+
+---
+
+## 7) Remaining Strict-MVC Debt (Known, Not Hidden)
+The codebase is significantly cleaner, but strict interpretation is not yet fully complete:
+- Model still depends on `java.awt.geom.Rectangle2D` for hitboxes:
+  - `src/main/java/main/model/entities/entity/Entity.java`
+  - `src/main/java/main/model/entities/states/PlayerModel.java`
+  - `src/main/java/main/model/entities/states/MovingPlatformModel.java`
+  - `src/main/java/main/model/entities/states/TriggerPlatformModel.java`
+  - `src/main/java/main/model/entities/states/TriggerSpikeModel.java`
+- Model still imports `LoadSave` in:
+  - `src/main/java/main/model/levels/LevelManager.java`
   - `src/main/java/main/model/leaderboard/LeaderboardService.java`
-  - `src/main/java/main/model/leaderboard/ScoreEntry.java`
-- `Leaderboard` view consumes data source, does not parse score files directly.
 
-### Why
-File I/O/parsing is not a view responsibility. View should render data, not load/parse it.
+These are the main remaining items for very strict MVC/infrastructure decoupling.
 
 ---
 
-## 9) GamePanel/GameWindow are passive wiring points
-### What changed
-- `GamePanel` exposes `attachInputListeners(...)` and delegates rendering:
-  - `src/main/java/main/view/GamePanel.java`
-- `GameWindow` forwards focus-loss callback through panel:
-  - `src/main/java/main/view/GameWindow.java`
-
-### Why
-Input composition and focus behavior should route through controller-owned flow, not through view internals.
-
----
-
-## 10) GameConfig extraction removed model dependency on controller constants
-### What changed
-- Added shared constants:
-  - `src/main/java/utilities/GameConfig.java`
-- Replaced direct dependence on `Game.GAME_WIDTH/HEIGHT/SCALE` in model/utility code.
-
-### Why
-Model/utility code should not depend on controller class constants.
-
----
-
-## Concrete Examples of Responsibility Moves
-
-1. Player drawing:
-- From model entity behavior
-- To `src/main/java/main/view/render/PlayerRenderer.java`
-
-2. Spike/trigger platform/trigger spike/spawn platform rendering:
-- From model level/entity drawing methods
-- To `src/main/java/main/view/render/LevelRenderer.java`
-
-3. Menu/level select/leaderboard transitions:
-- From view directly mutating game state
-- To action callbacks handled by controller state classes
-
-4. Transition side effects (audio + score persistence):
-- From observer indirection
-- To direct controller flow in `src/main/java/main/controller/Game.java`
-
-5. Keyboard behavior dispatch:
-- From branching logic in input handler
-- To command bindings + command execution in `src/main/java/main/controller/inputs/KeyboardInputs.java`
-
----
-
-## Current Design Outcome
-- **Improved MVC adherence**:
-  - Rendering moved into view renderers
-  - Views are callback-based and more passive
-  - Input is command-routed
-  - Controller owns transitions/side effects
-- **Reduced accidental complexity**:
-  - Observer indirection removed
-  - Input flow is explicit and centralized
-- **Better modularity than baseline**:
-  - Less cross-layer reach-through
-  - Clearer ownership of responsibilities
-
----
-
-## Remaining Technical Debt (Known)
-These are still present and should be next cleanup targets:
-- `Game` still holds many responsibilities (composition + loop + transition policy + some orchestration)
-- Model still uses `java.awt.geom.Rectangle2D` for hitboxes (acceptable pragmatically, but not pure UI-independence)
-- Some dead/redundant methods/fields remain (e.g., unused helpers and duplicate leaderboard action paths)
-
+## 8) Final Ownership Map (Current)
+- `Game`:
+  - composition root
+  - game loop
+  - input listener wiring
+- `GameController`:
+  - action facade
+  - state machine
+  - side effects (audio/persistence triggers)
+  - render delegation
+- `controller.state.*`:
+  - per-screen behavior
+  - enter/exit effects
+  - screen-specific input handling
+- `view.*`:
+  - drawing and UI event surfaces
+  - callback emission
+- `model.*`:
+  - player/level/game rules and state progression
+  - no direct rendering calls

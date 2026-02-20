@@ -9,6 +9,6 @@ Rayan;1;0;12.91
 Nadir;2;0;28.81
 Janna;1;0;11.22
 Oscar;1;0;17.51
-Oscar;1;0;12.16
+Nadir;1;0;12.16
 Player1;1;1;19.11
 Player1;1;4;22.45

@@ -1,4 +1,4 @@
-package main.model.entities.entity;
+package main.model.entities.entityLogic;
 
 import utilities.GameConfig;
 

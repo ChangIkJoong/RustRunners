@@ -1,6 +1,6 @@
-package main.model.entities.entity;
+package main.model.entities.entityLogic;
 
-import main.model.entities.states.MovingPlatformModel;
+import main.model.entities.entityData.MovingPlatformModel;
 
 public class MovingPlatform extends Entity {
 

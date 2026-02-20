@@ -1,4 +1,4 @@
-package main.model.entities.entity;
+package main.model.entities.entityLogic;
 
 public class SpawnPlatform extends Entity {
     private static final long WAIT_AT_BOTTOM_MS = 300;

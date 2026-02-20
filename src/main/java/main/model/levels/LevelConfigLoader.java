@@ -6,7 +6,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import main.model.entities.entity.SpawnPlatform;
+import main.model.entities.entityLogic.SpawnPlatform;
 
 public class LevelConfigLoader {
 

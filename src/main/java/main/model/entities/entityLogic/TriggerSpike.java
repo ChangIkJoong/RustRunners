@@ -1,6 +1,6 @@
-package main.model.entities.entity;
+package main.model.entities.entityLogic;
 
-import main.model.entities.states.TriggerSpikeModel;
+import main.model.entities.entityData.TriggerSpikeModel;
 
 public class TriggerSpike extends Entity {
 

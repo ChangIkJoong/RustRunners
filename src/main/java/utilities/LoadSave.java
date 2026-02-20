@@ -33,9 +33,9 @@ public class LoadSave {
     public static final String BACKGROUND = "BackgroundLeaderboards.png";
 
     // UI Buttons
-    public static final String BACK_BUTTON_NORMAL = "BackButton.png";
-    public static final String BACK_BUTTON_HOVER = "BackButtonHover.png";
-    public static final String BACK_BUTTON_CLICK = "BackButtonClick.png";
+    public static final String BACK_BUTTON_NORMAL = "QuitButton.png";
+    public static final String BACK_BUTTON_HOVER = "QuitButtonHover.png";
+    public static final String BACK_BUTTON_CLICK = "QuitButtonClick.png";
 
     // Main Menu Buttons
     public static final String PLAY_BUTTON_NORMAL = "PlayButton.png";

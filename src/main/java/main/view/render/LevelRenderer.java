@@ -5,12 +5,12 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.util.List;
 
-import main.model.entities.entity.DeathSprite;
-import main.model.entities.entity.MovingPlatform;
-import main.model.entities.entity.SpawnPlatform;
-import main.model.entities.entity.Spike;
-import main.model.entities.entity.TriggerPlatform;
-import main.model.entities.entity.TriggerSpike;
+import main.model.entities.entityLogic.DeathSprite;
+import main.model.entities.entityLogic.MovingPlatform;
+import main.model.entities.entityLogic.SpawnPlatform;
+import main.model.entities.entityLogic.Spike;
+import main.model.entities.entityLogic.TriggerPlatform;
+import main.model.entities.entityLogic.TriggerSpike;
 import main.model.levels.Level;
 import main.model.levels.LevelManager;
 import utilities.GameConfig;

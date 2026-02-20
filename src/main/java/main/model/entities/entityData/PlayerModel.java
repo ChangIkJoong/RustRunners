@@ -1,4 +1,4 @@
-package main.model.entities.states;
+package main.model.entities.entityData;
 
 import java.awt.geom.Rectangle2D;
 
@@ -7,6 +7,14 @@ import utilities.GameConfig;
 import static utilities.Constants.PlayerConstants.IDLE_RIGHT;
 
 public class PlayerModel {
+    /*
+    data container
+        - holds movement flags (left/right/jump/inAir)
+        - physics values (speed/gravity/jumpSpeed)
+        - run state (dead/deathTime/deaths/reachedLevelEnd)
+        - animation counters/state (aniTick/aniIndex/playerAction)
+        - level data reference and hitbox
+     */
 
     private Rectangle2D.Float hitbox;
 
