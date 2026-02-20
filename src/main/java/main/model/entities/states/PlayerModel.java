@@ -7,13 +7,6 @@ import main.model.entities.entity.Player;
 
 import static utilities.Constants.PlayerConstants.IDLE_RIGHT;
 
-/**
- * Pure state holder for {@link Player}.
- *
- * <p>This class intentionally contains no rendering code and no sprite assets.
- * It exists so the Player's gameplay state can be separated from animation
- * assets / view concerns.
- */
 public class PlayerModel {
 
     private Rectangle2D.Float hitbox;
