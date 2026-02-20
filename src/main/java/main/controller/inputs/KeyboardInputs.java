@@ -116,44 +116,44 @@ public class KeyboardInputs implements KeyListener {
 
     @Override
     public void keyTyped(KeyEvent event) {
-        dispatchTyped(event);
+        executeTyped(event);
     }
 
     @Override
     public void keyPressed(KeyEvent event) {
-        dispatchPressed(event);
+        executePressed(event);
     }
 
     @Override
     public void keyReleased(KeyEvent event) {
-        dispatchReleased(event);
+        executeReleased(event);
     }
 
-    private void dispatchPressed(KeyEvent event) {
-        dispatchCommands(pressedCommands.get(event.getKeyCode()));
+    private void executePressed(KeyEvent event) {
+        executeCommands(pressedCommands.get(event.getKeyCode()));
     }
 
-    private void dispatchReleased(KeyEvent event) {
-        dispatchCommands(releasedCommands.get(event.getKeyCode()));
+    private void executeReleased(KeyEvent event) {
+        executeCommands(releasedCommands.get(event.getKeyCode()));
     }
 
-    private void dispatchTyped(KeyEvent event) {
+    private void executeTyped(KeyEvent event) {
         int typedChar = event.getKeyChar();
         Command command = typedCommands.get(typedChar);
         if (command == null) {
             menuNameTypedCommand.setTypedChar(event.getKeyChar());
             command = menuNameTypedCommand;
         }
-        dispatchCommand(command);
+        executeCommand(command);
     }
 
-    private void dispatchCommand(Command command) {
+    private void executeCommand(Command command) {
         if (command != null) {
             command.execute();
         }
     }
 
-    private void dispatchCommands(List<Command> commands) {
+    private void executeCommands(List<Command> commands) {
         if (commands == null) {
             return;
         }

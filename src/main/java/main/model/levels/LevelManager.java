@@ -70,9 +70,6 @@ public class LevelManager {
         return levels.get(currentLevelIndex);
     }
 
-    /**
-     * @return true if the manager advanced to a new level, false when already at the final level.
-     */
     public boolean loadNextLevel() {
         markLevelCompleted(currentLevelIndex);
 

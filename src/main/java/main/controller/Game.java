@@ -27,11 +27,7 @@ import utilities.LoadSave;
 
 public class Game implements Runnable, IGameActions {
 
-    //public static final int TILES_DEAFULT_SIZE = GameConfig.TILES_DEFAULT_SIZE;
     public static final float SCALE = GameConfig.SCALE;
-    //public static final int TILES_IN_WIDTH = GameConfig.TILES_IN_WIDTH;
-    //public static final int TILES_IN_HEIGHT = GameConfig.TILES_IN_HEIGHT;
-    //public static final int TILES_SIZE = GameConfig.TILES_SIZE;
     public static final int GAME_WIDTH = GameConfig.GAME_WIDTH;
     public static final int GAME_HEIGHT = GameConfig.GAME_HEIGHT;
 
